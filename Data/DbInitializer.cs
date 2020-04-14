@@ -10,6 +10,7 @@ namespace BountyBoardServer.Data
     {
         public static void Initialize(BountyBoardContext context)
         {
+            context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
             if (context.Users.Any())
             {
@@ -27,16 +28,16 @@ namespace BountyBoardServer.Data
             }
             context.SaveChanges();
 
-            var events = new Event[]
+            /*var events = new Event[]
             {
-                new Event{Name = "Adventurers in Windhaven", MinPlayers = 2, MaxPlayers = 6, Location = "RIT", Time = DateTime.Parse("2020-10-10")},
-                new Event{Name = "Friday Night Magic", MinPlayers = 2, MaxPlayers = 100, Location = "RIT", Time = DateTime.Parse("2020-10-12")}
+                new Event{Name = "Adventurers in Windhaven", MinPlayers = 2, MaxPlayers = 6, StartTime = DateTime.Parse("2020-10-10")},
+                new Event{Name = "Friday Night Magic", MinPlayers = 2, MaxPlayers = 100, StartTime = DateTime.Parse("2020-10-12")}
             };
             foreach (Event e in events)
             {
                 context.Events.Add(e);
             }
-            context.SaveChanges();
+            context.SaveChanges();*/
         }
     }
 }

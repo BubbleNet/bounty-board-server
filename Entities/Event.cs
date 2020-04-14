@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NetTopologySuite.Geometries;
 
 namespace BountyBoardServer.Entities
 {
@@ -11,8 +12,9 @@ namespace BountyBoardServer.Entities
         public string Name { get; set; }
         public int MinPlayers { get; set; }
         public int MaxPlayers { get; set; }
-        public string Location { get; set; }
-        public DateTime Time { get; set; }
+        public Point Location { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
         public ICollection<User> Participants { get; set; }
         public User Host { get; set; }
     }

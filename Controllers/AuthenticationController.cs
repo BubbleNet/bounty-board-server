@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using BountyBoardServer.Model;
 using BountyBoardServer.Services;
 using Newtonsoft.Json;
+using BountyBoardServer.Data;
 
 namespace BountyBoardServer.Controllers
 {
@@ -17,14 +18,17 @@ namespace BountyBoardServer.Controllers
     public class AuthenticationController : Controller
     {
         private IAuthService _authService;
+        private readonly BountyBoardContext _context;
 
-        public AuthenticationController(IAuthService authService)
+        public AuthenticationController(IAuthService authService, BountyBoardContext context)
         {
             _authService = authService;
+            _context = context;
         }
 
         [HttpPost("authenticate")]
         [AllowAnonymous]
+        /// <summary>method <c>Authenticate</c>Returns a new Jwt token and refresh token.</summary>
         public IActionResult Authenticate([FromBody]AuthenticateModel model)
         {
             var token = _authService.Authenticate(model.Email, model.Password);
@@ -39,6 +43,7 @@ namespace BountyBoardServer.Controllers
 
         [HttpPost("refresh")]
         [AllowAnonymous]
+        /// <summary>method <c>Refresh</c>Returns a new Jwt token and refresh token.</summary>
         public IActionResult Refresh([FromBody]RefreshModel model)
         {
             var token = _authService.Refresh(model.RefreshToken);

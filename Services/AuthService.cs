@@ -9,6 +9,9 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using BountyBoardServer.Helpers;
 using System.IdentityModel.Tokens.Jwt;
+using BountyBoardServer.Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BountyBoardServer.Services
 {
@@ -24,34 +27,26 @@ namespace BountyBoardServer.Services
     ///
     public class AuthService : IAuthService
     {
-        //TODO: Remove
-        private static List<User> _users = new List<User>
-        {
-            new User{ Id = 1, Email = "admin@bountyboard.com", Password = "password", DisplayName = "Admin" }
-        };
-
-        //TODO: Remove
-        private static List<RefreshToken> _refreshTokens = new List<RefreshToken>
-        {
-            new RefreshToken{ User = _users[0], Token = "1"}
-        };
 
         private readonly AppSettings _appSettings;
+        private readonly BountyBoardContext _context;
 
-        public AuthService(IOptions<AppSettings> appSettings)
+        public AuthService(IOptions<AppSettings> appSettings, BountyBoardContext context)
         {
             _appSettings = appSettings.Value;
+            _context = context;
         }
 
         /// <summary>method <c>Authenticate</c>Verifies a Username/Password set and returns new tokens.</summary>
         public TokenModel Authenticate(string email, string password)
         {
-            // Placeholder until user database is running
-            var user = _users.SingleOrDefault(x => x.Email == email && x.Password == password);
+            // Check to see if user exists
+            var user = _context.Users.Where(x => x.Email == email).FirstOrDefault();
             if (user == null) return null;
 
-            //TODO: add check for user
-            //TODO: add password validation
+            //TODO: check if hashed passwords are equal
+            var hashedPassword = UserService.Hash(password, user.Salt);
+            if (!(hashedPassword == user.Password)) return null;
 
             return GenerateJwt(user);
         }
@@ -59,16 +54,20 @@ namespace BountyBoardServer.Services
         /// <summary>method <c>Refresh</c>Verifies a refresh token and returns renewed tokens.</summary>
         public TokenModel Refresh(string refreshToken)
         {
-            //TODO: Check to see if refresh token is valid
-
-            // Place holder until user database is running
-            var valid = _refreshTokens.SingleOrDefault(x => x.Token == refreshToken);
+            var l = _context.RefreshTokens.ToList();
+            // Check for passed token
+            if (String.IsNullOrEmpty(refreshToken)) return null;
+            // Check if refresh token is valid
+            var valid = _context.RefreshTokens.Include(t => t.User).Where(x => x.Token == refreshToken).FirstOrDefault();
             if (valid == null) return null;
-            var user = _users.SingleOrDefault(x => x.Id == valid.User.Id);
+            // Get user associated with refresh token
+            var user = _context.Users.Where(x => x.Id == valid.User.Id).FirstOrDefault();
             if (user == null) return null;
-
+            // Remove old token
+            _context.Remove(refreshToken);
+            _context.SaveChanges();
+            // Reauthenticate user
             return GenerateJwt(user);
-
         }
 
         /// <summary>method <c>GenerateJwt</c>Returns a new Jwt token and refresh token.</summary>
@@ -89,7 +88,9 @@ namespace BountyBoardServer.Services
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var refreshToken = new RefreshToken { User = user, Token = Guid.NewGuid().ToString() };
 
-            //TODO: store refresh token in DB
+            // Store refresh token in DB
+            _context.RefreshTokens.Add(refreshToken);
+            _context.SaveChanges();
 
             var newToken = new TokenModel
             { 

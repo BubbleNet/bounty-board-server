@@ -4,10 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using System.Net.Mail;
-using System.Text.RegularExpressions;
-using System.Globalization;
 using BountyBoardServer.Data;
+using BountyBoardServer.Services;
+using BountyBoardServer.Entities;
+using System.Security.Cryptography;
+using System.Security.Claims;
+using BountyBoardServer.Model;
+using Microsoft.EntityFrameworkCore;
 
 namespace BountyBoardServer.Controllers
 {
@@ -24,99 +27,80 @@ namespace BountyBoardServer.Controllers
         }
 
 
-        [HttpPost("create")]
+        [HttpPost("new")]
         [AllowAnonymous]
-        public IActionResult Create(string email, string password)
+        /// <summary>method <c>Create</c>Creates a new user.</summary>
+        public IActionResult Create([FromBody]AuthenticateModel model)
         {
             // Verify valid email format
-            if (!IsValidEmail(email)) return BadRequest(new { message = "Invalid email address" });
+            if (!UserService.IsValidEmail(model.Email)) return BadRequest(new { message = "Invalid email address" });
 
             // Verify password requirements
-            var problems = VerifyPasswordStrength(password);
+            var problems = UserService.VerifyPasswordStrength(model.Password);
             if (problems.Count >  0)
             {
                 return BadRequest(new { message = problems });
             }
 
             // Check if email already exists
-            // TODO: Check DB for email
+            var existingEmail = _context.Users.Where(x => EF.Functions.Like(x.Email, $"%{model.Email}%"));
+            if (existingEmail.Count() > 0)
+                return BadRequest(new { message = "Email address is already associated with an account." });
 
             // Create user
-            // TODO: Create user in db
+            // generate 120-bit salt
+            byte[] salt = new byte[128 / 8];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(salt);
+            }
+            // Create hashed pw
+            string hashed = UserService.Hash(model.Password, salt);
+            
+            // Store hashed pw and salt
+            var user = new User { Email = model.Email, Password = hashed, Salt = salt };
+            _context.Users.Add(user);
+            _context.SaveChanges();
+
 
             return Ok();
         }
 
-        [HttpGet("list")]
-        public IActionResult List()
+        [HttpGet("{id}")]
+        /// <summary>method <c>Get</c>Gets user infornmation by <c>id</c></summary>
+        public IActionResult Get(int id)
         {
-            var users = _context.Users.ToList();
-
-            return Ok(users);
-        }
-        
-        private static bool IsValidEmail(string email)
-        {
-            if (string.IsNullOrWhiteSpace(email)) return false;
-
-            try
-            {
-                // Normalize the domain
-                email = Regex.Replace(email, @"(@)(.+)$", DomainMapper,
-                                      RegexOptions.None, TimeSpan.FromMilliseconds(200));
-
-                // Examines the domain part of the email and normalizes it.
-                string DomainMapper(Match match)
-                {
-                    // Use IdnMapping class to convert Unicode domain names.
-                    var idn = new IdnMapping();
-
-                    // Pull out and process domain name (throws ArgumentException on invalid)
-                    var domainName = idn.GetAscii(match.Groups[2].Value);
-
-                    return match.Groups[1].Value + domainName;
-                }
-            }
-            catch (RegexMatchTimeoutException)
-            {
-                return false;
-            }
-            catch (ArgumentException)
-            {
-                return false;
-            }
-
-            try
-            {
-                return Regex.IsMatch(email,
-                @"^(?("")("".+?(?<!\\)""@)|(([0-9a-z]((\.(?!\.))|[-!#\$%&'\*\+/=\?\^`\{\}\|~\w])*)(?<=[0-9a-z])@))" +
-                @"(?(\[)(\[(\d{1,3}\.){3}\d{1,3}\])|(([0-9a-z][-0-9a-z]*[0-9a-z]*\.)+[a-z0-9][\-a-z0-9]{0,22}[a-z0-9]))$",
-                RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
-            }
-
-            catch (RegexMatchTimeoutException)
-            {
-                return false;
-            }
+            var user = _context.Users.Where(x => x.Id == id).FirstOrDefault();
+            if (user == null) return BadRequest(new { message = "User not found" });
+            var age = UserService.GetAge(user.DateOfBirth);
+            return Ok(new { user.Id, user.DisplayName, age });
         }
 
-        private static List<string> VerifyPasswordStrength(string password)
+        [HttpGet("me")]
+        /// <summary>method <c>GetMyInfo</c>Gets user infornmation for the logged in user</summary>
+        public IActionResult GetMyInfo()
         {
-            List<string> problemsList = new List<string>();
-            if (password.Length < 8) problemsList.Add("Password must be 8 or more characters.");
+            var claimsIdentity = this.User.Identity as ClaimsIdentity;
+            var userId = claimsIdentity.FindFirst(ClaimTypes.Name)?.Value;
+            var userIdInt = int.Parse(userId);
 
-            if (!Regex.Match(password, @"/\d+/", RegexOptions.ECMAScript).Success)
-                problemsList.Add("Password must contain at least one number.");
+            var user = _context.Users.Where(x => x.Id == userIdInt).FirstOrDefault();
+            var age = UserService.GetAge(user.DateOfBirth);
+            return Ok(new { user.Id, user.DisplayName, user.Email, age });
 
-            if (!(Regex.Match(password, @"/[a-z]/", RegexOptions.ECMAScript).Success &&
-                Regex.Match(password, @"/[A-Z]/", RegexOptions.ECMAScript).Success))
-                problemsList.Add("Password must contain at least one upper-case and one lower-case letter.");
+        }
 
-            if (!Regex.Match(password, @"/.[!,@,#,$,%,^,&,*,?,_,~,-,£,(,)]/",
-                RegexOptions.ECMAScript).Success)
-                problemsList.Add("Password must contain at least one symbol.");
+        [HttpPost("search")]
+        /// <summary>method <c>Search</c>Searches for a user by <c>email</c></summary>
+        public IActionResult Search([FromBody]string email)
+        {
+            var valid = UserService.IsValidEmail(email);
+            if (!valid) return BadRequest(new { message = "Not a valid email address" });
 
-            return problemsList;
+            var user = _context.Users.Where(x => x.Email == email).FirstOrDefault();
+            var age = UserService.GetAge(user.DateOfBirth);
+            return Ok(new { user.Id, user.DisplayName, user.Email, age });
+
         }
     }
 }

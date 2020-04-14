@@ -63,7 +63,8 @@ namespace BountyBoardServer
             services.AddScoped<IAuthService, AuthService>();
 
             services.AddDbContext<BountyBoardContext>(options => 
-            options.UseSqlServer(Configuration.GetConnectionString("BountyBoard")));
+            options.UseSqlServer(Configuration.GetConnectionString("BountyBoard"), 
+            x => x.UseNetTopologySuite()));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
