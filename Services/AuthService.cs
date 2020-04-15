@@ -45,7 +45,7 @@ namespace BountyBoardServer.Services
             if (user == null) return null;
 
             //TODO: check if hashed passwords are equal
-            var hashedPassword = UserService.Hash(password, user.Salt);
+            var hashedPassword = UserHelper.Hash(password, user.Salt);
             if (!(hashedPassword == user.Password)) return null;
 
             return GenerateJwt(user);
@@ -64,7 +64,7 @@ namespace BountyBoardServer.Services
             var user = _context.Users.Where(x => x.Id == valid.User.Id).FirstOrDefault();
             if (user == null) return null;
             // Remove old token
-            _context.Remove(refreshToken);
+            _context.Remove(valid);
             _context.SaveChanges();
             // Reauthenticate user
             return GenerateJwt(user);

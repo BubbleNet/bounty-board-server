@@ -31,6 +31,10 @@ namespace BountyBoardServer.Controllers
         /// <summary>method <c>Authenticate</c>Returns a new Jwt token and refresh token.</summary>
         public IActionResult Authenticate([FromBody]AuthenticateModel model)
         {
+            if(string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password))
+            {
+                return BadRequest(new { message = "Username and password are both required" });
+            }
             var token = _authService.Authenticate(model.Email, model.Password);
 
             if (token == null)

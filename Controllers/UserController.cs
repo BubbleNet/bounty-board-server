@@ -11,6 +11,8 @@ using System.Security.Cryptography;
 using System.Security.Claims;
 using BountyBoardServer.Model;
 using Microsoft.EntityFrameworkCore;
+using BountyBoardServer.Helpers;
+using BountyBoardServer.Models;
 
 namespace BountyBoardServer.Controllers
 {
@@ -20,10 +22,12 @@ namespace BountyBoardServer.Controllers
     public class UserController : Controller
     {
         private readonly BountyBoardContext _context;
+        private IUserService _userService;
 
-        public UserController(BountyBoardContext context)
+        public UserController(BountyBoardContext context, IUserService userService)
         {
             _context = context;
+            _userService = userService;
         }
 
 
@@ -33,10 +37,10 @@ namespace BountyBoardServer.Controllers
         public IActionResult Create([FromBody]AuthenticateModel model)
         {
             // Verify valid email format
-            if (!UserService.IsValidEmail(model.Email)) return BadRequest(new { message = "Invalid email address" });
+            if (!UserHelper.IsValidEmail(model.Email)) return BadRequest(new { message = "Invalid email address" });
 
             // Verify password requirements
-            var problems = UserService.VerifyPasswordStrength(model.Password);
+            var problems = UserHelper.VerifyPasswordStrength(model.Password);
             if (problems.Count >  0)
             {
                 return BadRequest(new { message = problems });
@@ -55,7 +59,7 @@ namespace BountyBoardServer.Controllers
                 rng.GetBytes(salt);
             }
             // Create hashed pw
-            string hashed = UserService.Hash(model.Password, salt);
+            string hashed = UserHelper.Hash(model.Password, salt);
             
             // Store hashed pw and salt
             var user = new User { Email = model.Email, Password = hashed, Salt = salt };
@@ -66,14 +70,57 @@ namespace BountyBoardServer.Controllers
             return Ok();
         }
 
+        [HttpPost("update")]
+        /// <summary>method <c>Update</c>Updates User attributes</summary>
+        public IActionResult Update([FromBody]PrivateUserDetailsModel model)
+        {
+            var user = _userService.GetCurrentUser(this);
+            if (model.DateOfBirth != null)
+            {
+                user.DateOfBirth = model.DateOfBirth;
+            }
+            if (!string.IsNullOrEmpty(model.DisplayName))
+            {
+                user.DisplayName = model.DisplayName;
+            }
+            if (!string.IsNullOrEmpty(model.FirstName))
+            {
+                user.FirstName = model.FirstName;
+            }
+            if (!string.IsNullOrEmpty(model.LastName))
+            {
+                user.LastName = model.LastName;
+            }
+            user.Gender = model.Gender;
+            // TODO: Confirm email before allowing switch.
+            if (!string.IsNullOrEmpty(model.Email))
+            {
+                var valid = UserHelper.IsValidEmail(model.Email);
+                if (valid)
+                {
+                    user.Email = model.Email;
+                }
+            }
+            _context.SaveChanges();
+            return Ok();
+        }
+
         [HttpGet("{id}")]
         /// <summary>method <c>Get</c>Gets user infornmation by <c>id</c></summary>
         public IActionResult Get(int id)
         {
             var user = _context.Users.Where(x => x.Id == id).FirstOrDefault();
-            if (user == null) return BadRequest(new { message = "User not found" });
-            var age = UserService.GetAge(user.DateOfBirth);
-            return Ok(new { user.Id, user.DisplayName, age });
+            if (user == null) return NotFound(new { message = "User not found" });
+            var age = UserHelper.GetAge(user.DateOfBirth);
+            var returnUser = new PublicUserDetailsModel
+            {
+                DisplayName = user.DisplayName,
+                Age = age,
+                Gender = user.Gender,
+                FirstName = user.FirstName,
+                LastName = user.LastName
+            };
+            return Ok(returnUser);
         }
 
         [HttpGet("me")]
@@ -85,21 +132,38 @@ namespace BountyBoardServer.Controllers
             var userIdInt = int.Parse(userId);
 
             var user = _context.Users.Where(x => x.Id == userIdInt).FirstOrDefault();
-            var age = UserService.GetAge(user.DateOfBirth);
-            return Ok(new { user.Id, user.DisplayName, user.Email, age });
+            var returnUser = new PrivateUserDetailsModel
+            {
+                Email = user.Email,
+                DisplayName = user.DisplayName,
+                DateOfBirth = user.DateOfBirth,
+                Gender = user.Gender,
+                FirstName = user.FirstName,
+                LastName = user.LastName
+            };
+            return Ok(returnUser);
 
         }
 
         [HttpPost("search")]
         /// <summary>method <c>Search</c>Searches for a user by <c>email</c></summary>
-        public IActionResult Search([FromBody]string email)
+        public IActionResult Search([FromBody]EmailModel email)
         {
-            var valid = UserService.IsValidEmail(email);
+            var valid = UserHelper.IsValidEmail(email.Email);
             if (!valid) return BadRequest(new { message = "Not a valid email address" });
 
-            var user = _context.Users.Where(x => x.Email == email).FirstOrDefault();
-            var age = UserService.GetAge(user.DateOfBirth);
-            return Ok(new { user.Id, user.DisplayName, user.Email, age });
+            var user = _context.Users.Where(x => x.Email == email.Email).FirstOrDefault();
+            if (user == null) return NotFound(new { message = "No results found" });
+            var age = UserHelper.GetAge(user.DateOfBirth);
+            var returnUser = new PublicUserDetailsModel
+            {
+                DisplayName = user.DisplayName,
+                Age = age,
+                Gender = user.Gender,
+                FirstName = user.FirstName,
+                LastName = user.LastName
+            };
+            return Ok(returnUser);
 
         }
     }

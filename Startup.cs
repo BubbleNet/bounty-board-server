@@ -61,6 +61,7 @@ namespace BountyBoardServer
 
             // Configure DI for application services
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IUserService, UserService>();
 
             services.AddDbContext<BountyBoardContext>(options => 
             options.UseSqlServer(Configuration.GetConnectionString("BountyBoard"), 
