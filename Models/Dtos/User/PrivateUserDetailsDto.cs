@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BountyBoardServer.Models
 {
-    public class PrivateUserDetailsModel
+    public class PrivateUserDetailsDto
     {
         public int Id { get; set; }
         public string Email { get; set; }
@@ -15,5 +15,6 @@ namespace BountyBoardServer.Models
         public GenderId Gender { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
+        public ICollection<Request> Requests { get; set; }
     }
 }

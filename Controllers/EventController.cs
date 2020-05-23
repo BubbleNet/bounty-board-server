@@ -14,6 +14,7 @@ using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using BountyBoardServer.Models;
 using BountyBoardServer.Helpers;
+using System.Data.Common;
 
 namespace BountyBoardServer.Controllers
 {
@@ -31,47 +32,97 @@ namespace BountyBoardServer.Controllers
             _userService = userService;
         }
 
+        /// <summary>
+        /// Creates a new event
+        /// </summary>
+        /// <returns>
+        /// The event if it was created
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// </remarks>
         [HttpPost("create")]
-        public IActionResult Create([FromBody]Event newEvent)
+        public IActionResult Create([FromBody]NewEventDto eventModel)
         {
-            // Return error if event has no name
-            if (string.IsNullOrEmpty(newEvent.Name)) return BadRequest(new { message = "Event name cannot be empty" });
-
-            // Get the creating user
-            var claimsIdentity = this.User.Identity as ClaimsIdentity;
-            var userId = claimsIdentity.FindFirst(ClaimTypes.Name)?.Value;
-            var userIdInt = int.Parse(userId);
-            var user = _context.Users.Where(x => x.Id == userIdInt).FirstOrDefault();
-
-            // Set the event host to the creating user
-            newEvent.Host = user;
+            // Validate
+            if (string.IsNullOrEmpty(eventModel.Name)) return BadRequest(new { message = "Event name cannot be empty" });
+            if (string.IsNullOrEmpty(eventModel.Game)) return BadRequest(new { message = "Event name game cannot be empty" });
+            if (string.IsNullOrEmpty(eventModel.Version)) return BadRequest(new { message = "Event version game cannot be empty" });
+            if (eventModel.MinPlayers > eventModel.MaxPlayers) return BadRequest(new { message = "Minimum players cannot be bigger than maximum players" });
+            var location = _context.Locations.Where(x => x.Id == eventModel.EventLocationId).FirstOrDefault();
+            if (location == null) return BadRequest(new { message = "Location not found" });
+            
+            // Get current user
+            var user = _userService.GetCurrentUser(this);
+           
+            // Create event with verified location and host as current user
+            var newEvent = eventModel.ToEvent(location, user);
             _context.Events.Add(newEvent);
             _context.SaveChanges();
 
-            // Return status 200 if sucessful
-            return Ok();
+            return Ok(newEvent.ToPrivateEventDto());
         }
 
-        [HttpPost("update")]
-        public IActionResult Update([FromBody] Event evUpdate)
+        /// <summary>
+        /// Updates the properties of an event
+        /// </summary>
+        /// <param name="event">The event including the Id of the event and any properties to update</param>
+        /// <returns>
+        /// The updated event
+        /// </returns>
+        /// <remarks>
+        ///
+        /// </remarks>
+        [HttpPatch("{id}")]
+        //TODO: Change this so that it only updates the stuff this user is allowed to update.
+        public IActionResult Update(int id, [FromBody] NewEventDto eventModel)
         {
-            var ev = _context.Events.Where(x => x.Id == evUpdate.Id).FirstOrDefault();
+            // Validate
+            if (string.IsNullOrEmpty(eventModel.Name)) return BadRequest(new { message = "Event name cannot be empty" });
+            if (string.IsNullOrEmpty(eventModel.Game)) return BadRequest(new { message = "Event name game cannot be empty" });
+            if (string.IsNullOrEmpty(eventModel.Version)) return BadRequest(new { message = "Event version game cannot be empty" });
+            if (eventModel.MinPlayers > eventModel.MaxPlayers) return BadRequest(new { message = "Minimum players cannot be bigger than maximum players" });
+            var location = _context.Locations.Where(x => x.Id == eventModel.EventLocationId).FirstOrDefault();
+            if (location == null) return BadRequest(new { message = "Location not found" });
+
+            // Get current user
+            var user = _userService.GetCurrentUser(this);
+
+            // Get the existing event
+            var ev = _context.Events.Where(x => x.Id == id && x.Host.Id == user.Id).FirstOrDefault();
             if (ev == null) return NotFound(new { message = "Event not found" });
 
-            if (!string.IsNullOrEmpty(evUpdate.Name)) ev.Name = evUpdate.Name;
-            else return BadRequest(new { message = "Event name cannot be empty" });
-            ev.MinPlayers = evUpdate.MinPlayers;
-            ev.MaxPlayers = evUpdate.MaxPlayers;
-            ev.StartTime = evUpdate.StartTime;
-            ev.EndTime = evUpdate.EndTime;
-            ev.RequestNeeded = evUpdate.RequestNeeded;
-            ev.RequestsOpen = evUpdate.RequestsOpen;
+            //Update allowed event properties
+            // Host can't be changed, other foreign keys cant be changed with patch method.
+            ev.Name = eventModel.Name;
+            ev.Game = eventModel.Game;
+            ev.Version = eventModel.Version;
+            ev.Summary = eventModel.Summary;
+            ev.Description = eventModel.Description;
+            ev.MinPlayers = eventModel.MinPlayers;
+            ev.MaxPlayers = eventModel.MaxPlayers;
+            ev.EventLocation = location;
+            ev.Repeating = eventModel.Repeating;
+            ev.RepeatInterval = eventModel.RepeatInterval;
+            ev.RequestNeeded = eventModel.RequestNeeded;
+            ev.RequestsOpen = eventModel.RequestsOpen;
+
             _context.SaveChanges();
 
-            return Ok();
+            return Ok(ev.ToPrivateEventDto());
         }
 
-        [HttpGet("get/{id}")]
+        /// <summary>
+        /// Gets an event
+        /// </summary>
+        /// <param name="id">The id of the event.</param>
+        /// <returns>
+        /// The event if it exists
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// </remarks>
+        [HttpGet("{id}")]
         public IActionResult Get(int id)
         {
             var ev = _context.Events
@@ -85,56 +136,101 @@ namespace BountyBoardServer.Controllers
             if(user.Id == ev.Host.Id)
             {
                 // If owner, return private view of event
-                return Ok(EventToPrivateEventModel(ev));
+                return Ok(ev.ToPrivateEventDto());
             }
             // If not owner, return public view of event
-            return Ok(EventToPublicEventModel(ev));
+            return Ok(ev.ToPublicEventDto());
         }
 
+        /// <summary>
+        /// Gets all events that belong to the current user
+        /// </summary>
+        /// <returns>
+        /// List of events belonging to the current user
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// </remarks>
         [HttpGet("me")]
         public IActionResult ListMyEvents()
         {
             // Get the creating user
-            var claimsIdentity = this.User.Identity as ClaimsIdentity;
-            var userId = claimsIdentity.FindFirst(ClaimTypes.Name)?.Value;
-            var userIdInt = int.Parse(userId);
-            // var user = _context.Users.Where(x => x.Id == userIdInt).FirstOrDefault();
+            var user = _userService.GetCurrentUser(this);
 
             // Get events for that user
             var events = _context.Events
                 .Include(h => h.Host)
                 .Include(h => h.Requests).ThenInclude(x => x.Requester)
                 .Include(p => p.Participants)
-                .Where(x => x.Host.Id == userIdInt);
+                .Where(x => x.Host.Id == user.Id).ToList();
+            if (events.Count() < 1) return NotFound(new { message = "No events found" });
 
-            List<PrivateEventModel> returnEvents = new List<PrivateEventModel>();
-            // TODO: Format event data
-            foreach(Event i in events)
-            {
-                returnEvents.Add(EventToPrivateEventModel(i));
-            }
+            List<PrivateEventDto> returnEvents = new List<PrivateEventDto>();
+            foreach(Event i in events) returnEvents.Add(i.ToPrivateEventDto());
 
             return Ok(returnEvents);
         }
 
-        [HttpGet("all")]
-        public IActionResult ListEvents()
+        /// <summary>
+        /// Get events based on filter criteria
+        /// </summary>
+        /// <returns>
+        /// a list of events
+        /// </returns>
+        /// <remarks>
+        ///
+        /// </remarks>
+        [HttpGet("list")]
+        public IActionResult ListEvents(
+            string game, 
+            string version, 
+            int minPlayers, 
+            int maxPlayers, 
+            string repeating, 
+            string requestsNeeded, 
+            string requestsOpen,
+            Double lat,
+            Double lon,
+            int range
+            )
         {
-            var events = _context.Events
+            IQueryable<Event> query = _context.Events
                 .Include(h => h.Host)
                 .Include(h => h.Requests).ThenInclude(x => x.Requester)
                 .Include(p => p.Participants);
 
-            List<PublicEventModel> returnEvents = new List<PublicEventModel>();
+            if (!string.IsNullOrEmpty(game)) query = query.Where(x => x.Game == game);
+            if (!string.IsNullOrEmpty(version)) query = query.Where(x => x.Version == version);
+            if (minPlayers != 0) query = query.Where(x => x.MinPlayers <= minPlayers);
+            if (maxPlayers != 0) query = query.Where(x => x.MaxPlayers >= maxPlayers);
+            if (!string.IsNullOrEmpty(repeating)) query = query.Where(x => x.Repeating == bool.Parse(repeating));
+            if (!string.IsNullOrEmpty(requestsNeeded)) query = query.Where(x => x.RequestNeeded == bool.Parse(requestsNeeded));
+            if (!string.IsNullOrEmpty(requestsOpen)) query = query.Where(x => x.RequestsOpen == bool.Parse(requestsOpen));
+            //TODO: Implement distance filtering
+
+            var events = query.ToList();
+            if (events.Count() < 1) return NotFound(new { message = "No events found" });
+
+            List<PublicEventDto> returnEvents = new List<PublicEventDto>();
             // TODO: Format event data
             foreach (Event i in events)
             {
-                returnEvents.Add(EventToPublicEventModel(i));
+                returnEvents.Add(i.ToPublicEventDto());
             }
 
             return Ok(returnEvents);
         }
 
+        /// <summary>
+        /// Adds the current user to the event
+        /// </summary>
+        /// <param name="id">The id of the event.</param>
+        /// <returns>
+        /// The event with the user added
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// </remarks>
         [HttpGet("join/{id}")]
         public IActionResult Join(int id)
         {
@@ -155,7 +251,7 @@ namespace BountyBoardServer.Controllers
                 {
                     if (r.Requester.Id == user.Id)
                     {
-                        if (r.Approved == true)
+                        if (r.Status == RequestStatus.Approved)
                         {
                             approved = true;
                             // Remove the request, but don't save until the user is actually added to the event
@@ -166,7 +262,7 @@ namespace BountyBoardServer.Controllers
                 }
                 if (approved == false)
                 {
-                    return BadRequest(new { message = "This event requires a request to join" });
+                    return BadRequest(new { message = "This event requires an approved request to join" });
                 }
             }
             // Check to see if the current participants exceeds the set maxamum participants
@@ -188,9 +284,19 @@ namespace BountyBoardServer.Controllers
                 ev.Participants.Add(user);
                 _context.SaveChanges();
             }
-            return Ok();
+            return Ok(ev.ToPublicEventDto());
         }
 
+        /// <summary>
+        /// Removes the current user from the event
+        /// </summary>
+        /// <param name="id">The id of the event.</param>
+        /// <returns>
+        /// The event without the current user
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// </remarks>
         [HttpPost("leave/{id}")]
         public IActionResult Leave(int id)
         {
@@ -218,106 +324,29 @@ namespace BountyBoardServer.Controllers
 
             ev.Participants.Remove(user);
             _context.SaveChanges();
-            return Ok();
+            return Ok(ev.ToPublicEventDto());
         }
 
-        [HttpDelete("delete/{id}")]
+        /// <summary>
+        /// Deletes an Event.
+        /// </summary>
+        /// <param name="id">The id of the event.</param>
+        /// <returns>
+        /// OK if event was deleted
+        /// Not Found if event was not found
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// </remarks>
+        [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
             var ev = _context.Events.Where(e => e.Id == id);
-            _context.Remove(ev);
+            if (ev == null) return NotFound(new { message = "Event not found" });
+
+            var obj = _context.Remove(ev);
             _context.SaveChanges();
             return Ok();
-        }
-
-        private PublicEventModel EventToPublicEventModel(Event ev)
-        {
-            var part = new List<PublicUserDetailsModel>();
-            foreach (User i in ev.Participants)
-            {
-                part.Add(UserToPublicUserDetailsModel(i));
-            }
-            var host = UserToPublicUserDetailsModel(ev.Host);
-            return new PublicEventModel
-            {
-                Id = ev.Id,
-                Name = ev.Name,
-                MinPlayers = ev.MinPlayers,
-                MaxPlayers = ev.MaxPlayers,
-                Location = ev.Location,
-                StartTime = ev.StartTime,
-                EndTime = ev.EndTime,
-                Participants = part,
-                Host = host,
-                RequestNeeded = ev.RequestNeeded,
-                RequestsOpen = ev.RequestsOpen
-            };
-        }
-
-        private PrivateEventModel EventToPrivateEventModel(Event ev)
-        {
-            var part = new List<PublicUserDetailsModel>();
-            foreach (User i in ev.Participants)
-            {
-                part.Add(UserToPublicUserDetailsModel(i));
-            }
-            var req = new List<HostRequestModel>();
-            foreach (Request i in ev.Requests)
-            {
-                req.Add(RequestToHostRequestModel(i));
-            }
-            var host = UserToPrivateUserDetailsModel(ev.Host);
-            return new PrivateEventModel
-            {
-                Id = ev.Id,
-                Name = ev.Name,
-                MinPlayers = ev.MinPlayers,
-                MaxPlayers = ev.MaxPlayers,
-                Location = ev.Location,
-                StartTime = ev.StartTime,
-                EndTime = ev.EndTime,
-                Participants = part,
-                Host = host,
-                RequestNeeded = ev.RequestNeeded,
-                RequestsOpen = ev.RequestsOpen,
-                Requests = req
-            };
-        }
-
-        private PrivateUserDetailsModel UserToPrivateUserDetailsModel(User user)
-        {
-            return new PrivateUserDetailsModel
-            {
-                Id = user.Id,
-                Email = user.Email,
-                DisplayName = user.DisplayName,
-                DateOfBirth = user.DateOfBirth,
-                Gender = user.Gender,
-                FirstName = user.FirstName,
-                LastName = user.LastName
-            };
-        }
-
-        private PublicUserDetailsModel UserToPublicUserDetailsModel(User user)
-        {
-            return new PublicUserDetailsModel
-            {
-                Id = user.Id,
-                DisplayName = user.DisplayName,
-                Age = UserHelper.GetAge(user.DateOfBirth),
-                Gender = user.Gender,
-                FirstName = user.FirstName,
-                LastName = user.LastName
-            };
-        }
-
-        private HostRequestModel RequestToHostRequestModel(Request request)
-        {
-            return new HostRequestModel
-            {
-                Requester = UserToPublicUserDetailsModel(request.Requester),
-                Description = request.Description
-            };
         }
     }
 }

@@ -6,7 +6,7 @@ using BountyBoardServer.Entities;
 
 namespace BountyBoardServer.Models
 {
-    public class PublicUserDetailsModel
+    public class PublicUserDetailsDto
     {
         public int Id { get; set; }
         public string DisplayName { get; set; }

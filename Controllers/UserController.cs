@@ -31,7 +31,7 @@ namespace BountyBoardServer.Controllers
         }
 
 
-        [HttpPost("new")]
+        [HttpPost]
         [AllowAnonymous]
         /// <summary>method <c>Create</c>Creates a new user.</summary>
         public IActionResult Create([FromBody]AuthenticateModel model)
@@ -67,42 +67,38 @@ namespace BountyBoardServer.Controllers
             _context.SaveChanges();
 
 
-            return Ok();
+            //TODO: Make a simpler return model here
+            return Ok(user.ToPrivateUserDetailsDto());
         }
 
-        [HttpPost("update")]
+        [HttpPatch("{id}")]
         /// <summary>method <c>Update</c>Updates User attributes</summary>
-        public IActionResult Update([FromBody]PrivateUserDetailsModel model)
+        public IActionResult Update(int id, [FromBody]User model)
         {
+            // Verify you are editing yourself
             var user = _userService.GetCurrentUser(this);
-            if (model.DateOfBirth != null)
-            {
-                user.DateOfBirth = model.DateOfBirth;
-            }
-            if (!string.IsNullOrEmpty(model.DisplayName))
-            {
-                user.DisplayName = model.DisplayName;
-            }
-            if (!string.IsNullOrEmpty(model.FirstName))
-            {
-                user.FirstName = model.FirstName;
-            }
-            if (!string.IsNullOrEmpty(model.LastName))
-            {
-                user.LastName = model.LastName;
-            }
+            if (id != user.Id) return NotFound(new { message = "User not found" });
+            // Normalize user id
+            model.Id = user.Id;
+
+            if (model.DateOfBirth == null) return BadRequest(new { message = "Date of Birth cannot be blank" });
+            user.DateOfBirth = model.DateOfBirth;
+            if (string.IsNullOrEmpty(model.DisplayName)) return BadRequest(new { message = "Display Name cannot be blank" });
+            user.DisplayName = model.DisplayName;
+            if (string.IsNullOrEmpty(model.FirstName)) return BadRequest(new { message = "First Name cannot be blank" });
+            user.FirstName = model.FirstName;
+            if (string.IsNullOrEmpty(model.LastName)) return BadRequest(new { message = "Last Name cannot be blank" });
+            user.LastName = model.LastName;
             user.Gender = model.Gender;
-            // TODO: Confirm email before allowing switch.
-            if (!string.IsNullOrEmpty(model.Email))
-            {
-                var valid = UserHelper.IsValidEmail(model.Email);
-                if (valid)
-                {
-                    user.Email = model.Email;
-                }
-            }
+
+            // TODO: Confirm email by sending verification before allowing switch.
+            if (string.IsNullOrEmpty(model.Email)) return BadRequest(new { message = "Email cannot be blank" });
+            var valid = UserHelper.IsValidEmail(model.Email);
+            if (!valid) return BadRequest(new { message = "Email invalid" });
+            user.Email = model.Email;
+
             _context.SaveChanges();
-            return Ok();
+            return Ok(user.ToPrivateUserDetailsDto());
         }
 
         [HttpGet("{id}")]
@@ -111,59 +107,21 @@ namespace BountyBoardServer.Controllers
         {
             var user = _context.Users.Where(x => x.Id == id).FirstOrDefault();
             if (user == null) return NotFound(new { message = "User not found" });
-            var age = UserHelper.GetAge(user.DateOfBirth);
-            var returnUser = new PublicUserDetailsModel
+            var currentUser = _userService.GetCurrentUser(this);
+            if (currentUser.Id == user.Id)
             {
-                DisplayName = user.DisplayName,
-                Age = age,
-                Gender = user.Gender,
-                FirstName = user.FirstName,
-                LastName = user.LastName
-            };
-            return Ok(returnUser);
-        }
-
-        [HttpGet("me")]
-        /// <summary>method <c>GetMyInfo</c>Gets user infornmation for the logged in user</summary>
-        public IActionResult GetMyInfo()
-        {
-            var claimsIdentity = this.User.Identity as ClaimsIdentity;
-            var userId = claimsIdentity.FindFirst(ClaimTypes.Name)?.Value;
-            var userIdInt = int.Parse(userId);
-
-            var user = _context.Users.Where(x => x.Id == userIdInt).FirstOrDefault();
-            var returnUser = new PrivateUserDetailsModel
-            {
-                Email = user.Email,
-                DisplayName = user.DisplayName,
-                DateOfBirth = user.DateOfBirth,
-                Gender = user.Gender,
-                FirstName = user.FirstName,
-                LastName = user.LastName
-            };
-            return Ok(returnUser);
-
+                return Ok(user.ToPrivateUserDetailsDto());
+            }
+            return Ok(user.ToPublicUserDetailsDto());
         }
 
         [HttpPost("search")]
         /// <summary>method <c>Search</c>Searches for a user by <c>email</c></summary>
         public IActionResult Search([FromBody]EmailModel email)
         {
-            var valid = UserHelper.IsValidEmail(email.Email);
-            if (!valid) return BadRequest(new { message = "Not a valid email address" });
-
             var user = _context.Users.Where(x => x.Email == email.Email).FirstOrDefault();
             if (user == null) return NotFound(new { message = "No results found" });
-            var age = UserHelper.GetAge(user.DateOfBirth);
-            var returnUser = new PublicUserDetailsModel
-            {
-                DisplayName = user.DisplayName,
-                Age = age,
-                Gender = user.Gender,
-                FirstName = user.FirstName,
-                LastName = user.LastName
-            };
-            return Ok(returnUser);
+            return Ok(user.ToPublicUserDetailsDto());
 
         }
     }

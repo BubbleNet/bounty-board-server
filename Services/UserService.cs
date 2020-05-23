@@ -13,7 +13,7 @@ namespace BountyBoardServer.Services
 
     /// <summary>Class <c>UserService</c> Provides the ability to get the current user as a service
     /// to allow method reuse.</summary>
-    ///
+    /// TODO: This should probably be a helper instead of a service.
     public class UserService : IUserService
     {
         private readonly BountyBoardContext _context;

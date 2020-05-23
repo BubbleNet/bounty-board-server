@@ -1,24 +1,104 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using BountyBoardServer.Models;
 using NetTopologySuite.Geometries;
 
 namespace BountyBoardServer.Entities
 {
+    public enum Interval
+    {
+        Daily,
+        Weekly,
+        Monthly,
+    }
     public class Event
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public string Game { get; set; }
+        public string Version { get; set; }
+        public string Summary { get; set; }
+        public string Description { get; set; }
         public int MinPlayers { get; set; }
         public int MaxPlayers { get; set; }
-        public Point Location { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
+        public Location EventLocation { get; set; }
+        public ICollection<Meeting> Meetings { get; set; }
+        public bool Repeating { get; set; }
+        public Interval RepeatInterval { get; set; }
         public ICollection<User> Participants { get; set; }
         public User Host { get; set; }
         public bool RequestNeeded { get; set; } // Indicates if a user needs to request to join an event
         public bool RequestsOpen { get; set; } // Indicates if requests are allowed for this event
         public ICollection<Request> Requests { get; set; } // Collection of requests to join the event
+
+        public PrivateEventDto ToPrivateEventDto()
+        {
+            var part = new List<PublicUserDetailsDto>();
+            if ((this.Participants != null) && (this.Participants.Count > 0))
+            {
+                foreach (User i in this.Participants)
+                {
+                    part.Add(i.ToPublicUserDetailsDto());
+                }
+            }
+
+            var req = new List<HostRequestDto>();
+            if ((this.Requests != null) && (this.Requests.Count > 0))
+            {
+                foreach (Request i in this.Requests)
+                {
+                    req.Add(i.ToHostRequestDto());
+                }
+            }
+            var host = this.Host.ToPrivateUserDetailsDto();
+            return new PrivateEventDto
+            {
+                Id = this.Id,
+                Name = this.Name,
+                Game = this.Game,
+                Version = this.Version,
+                Summary = this.Summary,
+                Description = this.Description,
+                MinPlayers = this.MinPlayers,
+                MaxPlayers = this.MaxPlayers,
+                EventLocation = this.EventLocation,
+                Meetings = this.Meetings,
+                Repeating = this.Repeating,
+                RepeatInterval = this.RepeatInterval,
+                Participants = part,
+                Host = host,
+                RequestNeeded = this.RequestNeeded,
+                RequestsOpen = this.RequestsOpen,
+                Requests = req
+            };
+        }
+
+        public PublicEventDto ToPublicEventDto()
+        {
+            var part = new List<PublicUserDetailsDto>();
+            foreach (User i in this.Participants)
+            {
+                part.Add(i.ToPublicUserDetailsDto());
+            }
+            var host = this.Host.ToPublicUserDetailsDto();
+            return new PublicEventDto
+            {
+                Id = this.Id,
+                Name = this.Name,
+                Game = this.Game,
+                Version = this.Version,
+                Summary = this.Summary,
+                Description = this.Description,
+                MinPlayers = this.MinPlayers,
+                MaxPlayers = this.MaxPlayers,
+                EventLocation = this.EventLocation,
+                Meetings = this.Meetings,
+                Repeating = this.Repeating,
+                RepeatInterval = this.RepeatInterval,
+                Participants = part,
+                Host = host,
+                RequestNeeded = this.RequestNeeded,
+                RequestsOpen = this.RequestsOpen
+            };
+        }
     }
 }
