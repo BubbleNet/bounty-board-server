@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using BountyBoardServer.Models;
 using NetTopologySuite.Geometries;
 
@@ -14,8 +15,8 @@ namespace BountyBoardServer.Entities
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public string Game { get; set; }
-        public string Version { get; set; }
+        public Game Game { get; set; }
+        public Edition Edition { get; set; }
         public string Summary { get; set; }
         public string Description { get; set; }
         public int MinPlayers { get; set; }
@@ -35,27 +36,21 @@ namespace BountyBoardServer.Entities
             var part = new List<PublicUserDetailsDto>();
             if ((this.Participants != null) && (this.Participants.Count > 0))
             {
-                foreach (User i in this.Participants)
-                {
-                    part.Add(i.ToPublicUserDetailsDto());
-                }
+                foreach (User i in this.Participants) part.Add(i.ToPublicUserDetailsDto());
             }
 
             var req = new List<HostRequestDto>();
             if ((this.Requests != null) && (this.Requests.Count > 0))
             {
-                foreach (Request i in this.Requests)
-                {
-                    req.Add(i.ToHostRequestDto());
-                }
+                foreach (Request i in this.Requests) req.Add(i.ToHostRequestDto());
             }
-            var host = this.Host.ToPrivateUserDetailsDto();
+
             return new PrivateEventDto
             {
                 Id = this.Id,
                 Name = this.Name,
-                Game = this.Game,
-                Version = this.Version,
+                Game = this.Game.ToBasicGameDto(),
+                Edition = this.Edition,
                 Summary = this.Summary,
                 Description = this.Description,
                 MinPlayers = this.MinPlayers,
@@ -65,7 +60,7 @@ namespace BountyBoardServer.Entities
                 Repeating = this.Repeating,
                 RepeatInterval = this.RepeatInterval,
                 Participants = part,
-                Host = host,
+                Host = this.Host.ToPrivateUserDetailsDto(),
                 RequestNeeded = this.RequestNeeded,
                 RequestsOpen = this.RequestsOpen,
                 Requests = req
@@ -75,17 +70,17 @@ namespace BountyBoardServer.Entities
         public PublicEventDto ToPublicEventDto()
         {
             var part = new List<PublicUserDetailsDto>();
-            foreach (User i in this.Participants)
+            if ((this.Participants != null) && (this.Participants.Count > 0))
             {
-                part.Add(i.ToPublicUserDetailsDto());
+                foreach (User i in this.Participants) part.Add(i.ToPublicUserDetailsDto());
             }
-            var host = this.Host.ToPublicUserDetailsDto();
+
             return new PublicEventDto
             {
                 Id = this.Id,
                 Name = this.Name,
-                Game = this.Game,
-                Version = this.Version,
+                Game = this.Game.ToBasicGameDto(),
+                Edition = this.Edition,
                 Summary = this.Summary,
                 Description = this.Description,
                 MinPlayers = this.MinPlayers,
@@ -95,7 +90,7 @@ namespace BountyBoardServer.Entities
                 Repeating = this.Repeating,
                 RepeatInterval = this.RepeatInterval,
                 Participants = part,
-                Host = host,
+                Host = this.Host.ToPublicUserDetailsDto(),
                 RequestNeeded = this.RequestNeeded,
                 RequestsOpen = this.RequestsOpen
             };

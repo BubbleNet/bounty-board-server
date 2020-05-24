@@ -40,7 +40,7 @@ namespace BountyBoardServer.Controllers
         /// <remarks>
         /// 
         /// </remarks>
-        [HttpPost("create")]
+        [HttpPost]
         public IActionResult Create([FromBody] int eventId, string description)
         {
             // Get event
@@ -53,6 +53,9 @@ namespace BountyBoardServer.Controllers
 
             // Get the current user
             var user = _userService.GetCurrentUser(this);
+
+            // Check if user is host
+            if (ev.Host.Id == user.Id) return BadRequest(new { message = "Cannot request to join your own event" });
 
             // Check if user already has request
             foreach (Request r in ev.Requests)
@@ -70,7 +73,12 @@ namespace BountyBoardServer.Controllers
             Request req;
             if (!ev.RequestNeeded || ev.Participants.ToList().Count >= ev.MaxPlayers)
             {
-                req = new Request { Requester = user, Event = ev, Description = description };
+                req = new Request { 
+                    Requester = user, 
+                    Event = ev, 
+                    Description = description, 
+                    Status = RequestStatus.Pending 
+                };
                 _context.Requests.Add(req);
                 _context.SaveChanges();
             }

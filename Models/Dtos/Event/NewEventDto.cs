@@ -10,8 +10,8 @@ namespace BountyBoardServer.Models
     public class NewEventDto
     {
         public string Name { get; set; }
-        public string Game { get; set; }
-        public string Version { get; set; }
+        public int GameId { get; set; }
+        public int EditionId { get; set; }
         public string Summary { get; set; }
         public string Description { get; set; }
         public int MinPlayers { get; set; }
@@ -22,13 +22,13 @@ namespace BountyBoardServer.Models
         public bool RequestNeeded { get; set; } // Indicates if a user needs to request to join an event
         public bool RequestsOpen { get; set; } // Indicates if requests are allowed for this event
 
-        public Event ToEvent(Location location, User host)
+        public Event ToEvent(Location location, User host, Game game, Edition edition)
         {
             return new Event()
             {
                 Name = this.Name,
-                Game = this.Game,
-                Version = this.Version,
+                Game = game,
+                Edition = edition,
                 Summary = this.Summary,
                 Description = this.Description,
                 MinPlayers = this.MinPlayers,

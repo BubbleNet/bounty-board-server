@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using BountyBoardServer.Entities;
 using BountyBoardServer.Models;
+using BountyBoardServer.Models.Dtos;
 
 namespace BountyBoardServer.Models
 {
@@ -8,8 +9,8 @@ namespace BountyBoardServer.Models
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public string Game { get; set; }
-        public string Version { get; set; }
+        public BasicGameDto Game { get; set; }
+        public Edition Edition { get; set; }
         public string Summary { get; set; }
         public string Description { get; set; }
         public int MinPlayers { get; set; }

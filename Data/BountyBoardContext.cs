@@ -23,7 +23,7 @@ namespace BountyBoardServer.Data
         public DbSet<Location> Locations { get; set; }
         public DbSet<Meeting> Meetings { get; set; }
         public DbSet<Schedule> Schedules { get; set; }
-        public DbSet<Group> Groups { get; set; }
-        public DbSet<Permission> Permissions { get; set; }
+        public DbSet<Game> Games { get; set; }
+        public DbSet<Edition> Editions { get; set; }
     }
 }

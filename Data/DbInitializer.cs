@@ -55,7 +55,7 @@ namespace BountyBoardServer.Data
             //    //new Permission { Name = "user/Schedule/View", Description = "", Resource = PermissionResource.Schedule, Action = PermissionAction.View, Relationship = PermissionRelationship.Owner, Attr = PermissionAttr.Any },
             //    //new Permission { Name = "user/Schedule/Edit", Description = "", Resource = PermissionResource.Schedule, Action = PermissionAction.Edit, Relationship = PermissionRelationship.Owner, Attr = PermissionAttr.Any },
             //    //new Permission { Name = "user/Schedule/Delete", Description = "", Resource = PermissionResource.Schedule, Action = PermissionAction.Delete, Relationship = PermissionRelationship.Owner, Attr = PermissionAttr.Any },
-                 
+
             //    new Permission { Name = "user/User/Edit", Description = "", Resource = PermissionResource.User, Action = PermissionAction.Edit, Relationship = PermissionRelationship.Owner, Attr = PermissionAttr.Any },
 
             //};
@@ -76,6 +76,31 @@ namespace BountyBoardServer.Data
             //    context.Groups.Add(g);
             //}
             //context.SaveChanges();
+            var editions = new List<Edition>
+            {
+                new Edition {Name = "3.5e"},
+                new Edition {Name = "5e"},
+                new Edition {Name = "Advanced"},
+                new Edition {Name = "1" },
+                new Edition {Name = "2"}
+            };
+            foreach (Edition e in editions)
+            {
+                context.Editions.Add(e);
+            }
+            context.SaveChanges();
+
+
+            var games = new List<Game>
+            {
+                new Game {Name = "Dungeons & Dragons", Editions = editions.GetRange(0,2), Publisher = "Wizards of the Coast"},
+                new Game {Name = "Pathfinder", Editions = editions.GetRange(3, 2), Publisher = "Paizo"}
+            };
+            foreach (Game g in games)
+            {
+                context.Games.Add(g);
+            }
+            context.SaveChanges();
 
 
             var schedules = new List<Schedule>
@@ -104,6 +129,11 @@ namespace BountyBoardServer.Data
 
             var locations = new List<Location>
             {
+                new Location
+                {
+                    Name = "Online",
+                    Description = "Online. Roll 20, Fantasy Grounds, Zoom, Discord, etc."
+                },
                 new Location
                 {
                     Name = "Millennium Games",
@@ -187,13 +217,13 @@ namespace BountyBoardServer.Data
                 {
                     Requester = users[1],
                     Description = "Hi I want to join your game!",
-                    Approved = false,
+                    Status = RequestStatus.Pending,
                 },
                 new Request
                 {
                     Requester = users[1],
                     Description = "Pls let jon",
-                    Approved = false,
+                    Status = RequestStatus.Pending,
                 }
             };
             foreach (Request r in requests)
@@ -207,8 +237,8 @@ namespace BountyBoardServer.Data
             {
                 new Event{
                     Name = "Adventurers in Windhaven", 
-                    Game = "Dungeons and Dragons",
-                    Version = "5e",
+                    Game = games[0],
+                    Edition = editions[0],
                     Summary = "You and four other adventurers have a chance encounter in Windhaven leading to many adventures.",
                     Description = "Description Placeholder",
                     MinPlayers = 2,
@@ -223,8 +253,8 @@ namespace BountyBoardServer.Data
                 },
                 new Event{
                     Name = "Baulder's Gate, Decent into Avernus",
-                    Game = "Dungeons and Dragons",
-                    Version = "3.5e",
+                    Game = games[0],
+                    Edition = editions[1],
                     Summary = "A party of six adventurers decends into the depths of hell to fight against an evil Devil Prince.",
                     Description = "This is a description",
                     MinPlayers = 4,
@@ -239,8 +269,8 @@ namespace BountyBoardServer.Data
                 },
                 new Event{
                     Name = "Adventurers on the Sword Coast",
-                    Game = "Dungeons and Dragons",
-                    Version = "3.5e",
+                    Game = games[1],
+                    Edition = editions[4],
                     Summary = "Join a group of adventurers protecting the sword coast againt pirates!",
                     Description = "I don't want to write out a whole description for this.",
                     MinPlayers = 4,

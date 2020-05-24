@@ -28,7 +28,6 @@ namespace BountyBoardServer.Entities
         public GenderId Gender { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        public ICollection<Request> Requests { get; set; }
 
         public PrivateUserDetailsDto ToPrivateUserDetailsDto()
         {
@@ -40,8 +39,7 @@ namespace BountyBoardServer.Entities
                 DateOfBirth = this.DateOfBirth,
                 Gender = this.Gender,
                 FirstName = this.FirstName,
-                LastName = this.LastName,
-                Requests = this.Requests
+                LastName = this.LastName
             };
         }
 

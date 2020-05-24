@@ -41,22 +41,30 @@ namespace BountyBoardServer.Controllers
         /// <remarks>
         /// 
         /// </remarks>
-        [HttpPost("create")]
+        [HttpPost]
         public IActionResult Create([FromBody]NewEventDto eventModel)
         {
             // Validate
             if (string.IsNullOrEmpty(eventModel.Name)) return BadRequest(new { message = "Event name cannot be empty" });
-            if (string.IsNullOrEmpty(eventModel.Game)) return BadRequest(new { message = "Event name game cannot be empty" });
-            if (string.IsNullOrEmpty(eventModel.Version)) return BadRequest(new { message = "Event version game cannot be empty" });
+            if (eventModel.GameId == 0) return BadRequest(new { message = "Event gameId cannot be empty" });
+            if (eventModel.EditionId == 0) return BadRequest(new { message = "Event editionId game cannot be empty" });
             if (eventModel.MinPlayers > eventModel.MaxPlayers) return BadRequest(new { message = "Minimum players cannot be bigger than maximum players" });
+           
             var location = _context.Locations.Where(x => x.Id == eventModel.EventLocationId).FirstOrDefault();
             if (location == null) return BadRequest(new { message = "Location not found" });
             
+            var game = _context.Games.Include(g => g.Editions).Where(g => g.Id == eventModel.GameId).FirstOrDefault();
+            if (game == null) return BadRequest(new { message = "Game not found" });
+
+            Edition edition = null;
+            foreach (Edition e in game.Editions) if (e.Id == eventModel.EditionId) edition = e;
+            if (edition == null) return BadRequest(new { message = "Edition not found" });
+
             // Get current user
             var user = _userService.GetCurrentUser(this);
            
             // Create event with verified location and host as current user
-            var newEvent = eventModel.ToEvent(location, user);
+            var newEvent = eventModel.ToEvent(location, user, game, edition);
             _context.Events.Add(newEvent);
             _context.SaveChanges();
 
@@ -79,11 +87,18 @@ namespace BountyBoardServer.Controllers
         {
             // Validate
             if (string.IsNullOrEmpty(eventModel.Name)) return BadRequest(new { message = "Event name cannot be empty" });
-            if (string.IsNullOrEmpty(eventModel.Game)) return BadRequest(new { message = "Event name game cannot be empty" });
-            if (string.IsNullOrEmpty(eventModel.Version)) return BadRequest(new { message = "Event version game cannot be empty" });
+            if (eventModel.GameId == 0) return BadRequest(new { message = "Event name game cannot be empty" });
+            if (eventModel.EditionId == 0) return BadRequest(new { message = "Event version game cannot be empty" });
             if (eventModel.MinPlayers > eventModel.MaxPlayers) return BadRequest(new { message = "Minimum players cannot be bigger than maximum players" });
+            
             var location = _context.Locations.Where(x => x.Id == eventModel.EventLocationId).FirstOrDefault();
             if (location == null) return BadRequest(new { message = "Location not found" });
+
+            var game = _context.Games.Where(g => g.Id == eventModel.GameId).FirstOrDefault();
+            if (game == null) return BadRequest(new { message = "Game not found" });
+
+            var edition = _context.Editions.Where(e => e.Id == eventModel.EditionId).FirstOrDefault();
+            if (edition == null) return BadRequest(new { message = "Edition not found" });
 
             // Get current user
             var user = _userService.GetCurrentUser(this);
@@ -95,8 +110,8 @@ namespace BountyBoardServer.Controllers
             //Update allowed event properties
             // Host can't be changed, other foreign keys cant be changed with patch method.
             ev.Name = eventModel.Name;
-            ev.Game = eventModel.Game;
-            ev.Version = eventModel.Version;
+            ev.Game = game;
+            ev.Edition = edition;
             ev.Summary = eventModel.Summary;
             ev.Description = eventModel.Description;
             ev.MinPlayers = eventModel.MinPlayers;
@@ -126,9 +141,13 @@ namespace BountyBoardServer.Controllers
         public IActionResult Get(int id)
         {
             var ev = _context.Events
-                .Include(h => h.Host)
-                .Include(h => h.Requests).ThenInclude(x => x.Requester)
-                .Include(p => p.Participants)
+                .Include(e => e.Game)
+                .Include(e => e.Edition)
+                .Include(e => e.EventLocation)
+                .Include(e => e.Meetings)
+                .Include(e => e.Host)
+                .Include(e => e.Requests).ThenInclude(r => r.Requester)
+                .Include(e => e.Participants)
                 .Where(x => x.Id == id).FirstOrDefault();
             if (ev == null) return NotFound(new { message = "Event not found" });
 
@@ -159,9 +178,13 @@ namespace BountyBoardServer.Controllers
 
             // Get events for that user
             var events = _context.Events
-                .Include(h => h.Host)
-                .Include(h => h.Requests).ThenInclude(x => x.Requester)
-                .Include(p => p.Participants)
+                .Include(e => e.Game)
+                .Include(e => e.Edition)
+                .Include(e => e.EventLocation)
+                .Include(e => e.Meetings)
+                .Include(e => e.Host)
+                .Include(e => e.Requests).ThenInclude(x => x.Requester)
+                .Include(e => e.Participants)
                 .Where(x => x.Host.Id == user.Id).ToList();
             if (events.Count() < 1) return NotFound(new { message = "No events found" });
 
@@ -182,8 +205,8 @@ namespace BountyBoardServer.Controllers
         /// </remarks>
         [HttpGet("list")]
         public IActionResult ListEvents(
-            string game, 
-            string version, 
+            int gameId, 
+            int editionId, 
             int minPlayers, 
             int maxPlayers, 
             string repeating, 
@@ -195,12 +218,16 @@ namespace BountyBoardServer.Controllers
             )
         {
             IQueryable<Event> query = _context.Events
-                .Include(h => h.Host)
-                .Include(h => h.Requests).ThenInclude(x => x.Requester)
-                .Include(p => p.Participants);
+                .Include(e => e.Game)
+                .Include(e => e.Edition)
+                .Include(e => e.EventLocation)
+                .Include(e => e.Meetings)
+                .Include(e => e.Host)
+                .Include(e => e.Requests).ThenInclude(r => r.Requester)
+                .Include(e => e.Participants);
 
-            if (!string.IsNullOrEmpty(game)) query = query.Where(x => x.Game == game);
-            if (!string.IsNullOrEmpty(version)) query = query.Where(x => x.Version == version);
+            if (gameId != 0) query = query.Where(x => x.Game.Id == gameId);
+            if (editionId != 0) query = query.Where(x => x.Edition.Id == editionId);
             if (minPlayers != 0) query = query.Where(x => x.MinPlayers <= minPlayers);
             if (maxPlayers != 0) query = query.Where(x => x.MaxPlayers >= maxPlayers);
             if (!string.IsNullOrEmpty(repeating)) query = query.Where(x => x.Repeating == bool.Parse(repeating));
@@ -231,18 +258,27 @@ namespace BountyBoardServer.Controllers
         /// <remarks>
         /// 
         /// </remarks>
-        [HttpGet("join/{id}")]
+        [HttpPost("join/{id}")]
         public IActionResult Join(int id)
         {
             // Get event
             var ev = _context.Events
-                .Include(h => h.Requests)
-                .Include(p => p.Participants)
+                .Include(e => e.Game)
+                .Include(e => e.Edition)
+                .Include(e => e.EventLocation)
+                .Include(e => e.Meetings)
+                .Include(e => e.Requests)
+                .Include(e => e.Participants)
+                .Include(e => e.Host)
                 .Where(e => e.Id == id)
                 .FirstOrDefault();
             if (ev == null) return NotFound(new { message = "Event not found" });
             // Get the requesting user
             var user = _userService.GetCurrentUser(this);
+
+            // Ensure the requesting user is not the host
+            if (ev.Host.Id == user.Id) return BadRequest( new { message = "Host cannot join event" });
+
             // If a request is needed check to see if request is approved
             if (ev.RequestNeeded)
             {
@@ -302,8 +338,13 @@ namespace BountyBoardServer.Controllers
         {
             // Get event
             var ev = _context.Events
-                .Include(h => h.Requests)
-                .Include(p => p.Participants)
+                .Include(e => e.Game)
+                .Include(e => e.Edition)
+                .Include(e => e.EventLocation)
+                .Include(e => e.Meetings)
+                .Include(e => e.Requests)
+                .Include(e => e.Participants)
+                .Include(e => e.Host)
                 .Where(e => e.Id == id)
                 .FirstOrDefault();
             if (ev == null) return NotFound(new { message = "Event not found" });
@@ -341,7 +382,10 @@ namespace BountyBoardServer.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var ev = _context.Events.Where(e => e.Id == id);
+            var ev = _context.Events
+                .Include(e => e.Meetings)
+                .Include(e => e.Requests)
+                .Where(e => e.Id == id).FirstOrDefault();
             if (ev == null) return NotFound(new { message = "Event not found" });
 
             var obj = _context.Remove(ev);
