@@ -383,15 +383,96 @@ namespace BountyBoardServer.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
+            // Get event
             var ev = _context.Events
                 .Include(e => e.Meetings)
                 .Include(e => e.Requests)
                 .Where(e => e.Id == id).FirstOrDefault();
             if (ev == null) return NotFound(new { message = "Event not found" });
 
-            var obj = _context.Remove(ev);
+            // Allow deletion if current user is host or Admin
+            var user = _userService.GetCurrentUser(this);
+            if (ev.Host.Id == user.Id || user.IsRole("Administrator"))
+            {
+                var obj = _context.Remove(ev);
+                _context.SaveChanges();
+                return Ok();
+            }
+            return NotFound(new { message = "Event not found" });
+
+        }
+
+        /// <summary>
+        /// Create a new meeting for a specified event
+        /// </summary>
+        /// <param name="id">The id of the event.</param>
+        /// <returns>
+        /// The meeting
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// </remarks>
+        [HttpPost("{id}/meeting")]
+        public IActionResult CreateMeeting(int id, [FromBody] Meeting meeting)
+        {
+            // Get event
+            var ev = _context.Events
+                .Include(e => e.Meetings)
+                .Include(e => e.Host)
+                .Where(e => e.Id == id).FirstOrDefault();
+            if (ev == null) return NotFound(new { message = "Event not found" });
+
+            // Check if user is host
+            var user = _userService.GetCurrentUser(this);
+            if (user.Id != ev.Host.Id) return NotFound(new { message = "Event not found" });
+
+            // Check if start time is earlier than complete time
+            if(DateTime.Compare(meeting.StartTime, meeting.EndTime) <= 0) 
+                return BadRequest(new { message = "Start time is later than or equal to end time" });
+
+            // Save the meeting
+            ev.Meetings.Add(meeting);
             _context.SaveChanges();
-            return Ok();
+
+            return Ok(meeting);
+        }
+
+        /// <summary>
+        /// Delete an existing meeting
+        /// </summary>
+        /// <param name="id">The id of the event.</param>
+        /// <param name="meetingId">The id of the meeting.</param>
+        /// <returns>
+        /// Ok if deleted
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// </remarks>
+        [HttpDelete("{id}/meeting/{meetingId}")]
+        public IActionResult DeleteMeeting(int id, int meetingId)
+        {
+            // Get event
+            var ev = _context.Events
+                .Include(e => e.Meetings)
+                .Include(e => e.Host)
+                .Where(e => e.Id == id).FirstOrDefault();
+            if (ev == null) return NotFound(new { message = "Event not found" });
+
+            // Check if user is host
+            var user = _userService.GetCurrentUser(this);
+            if (user.Id != ev.Host.Id) return NotFound(new { message = "Event not found" });
+
+            // Find the meeting and delete it
+            foreach(Meeting m in ev.Meetings)
+            {
+                if (m.Id == meetingId)
+                {
+                    _context.Meetings.Remove(m);
+                    _context.SaveChanges();
+                    return Ok();
+                }
+            }
+            return NotFound(new { message = "Meeting not found" });
         }
     }
 }
