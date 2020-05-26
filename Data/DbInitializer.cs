@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using System.Text;
 using System.Threading.Tasks;
 using BountyBoardServer.Entities;
+using BountyBoardServer.Helpers;
 using BountyBoardServer.Models;
 
 namespace BountyBoardServer.Data
@@ -22,60 +24,16 @@ namespace BountyBoardServer.Data
                 return;
             }
 
-            //var permissions = new List<Permission>
-            //{
-            //    new Permission { Name = "admin.all", Description = "Superuser permission", Resource = PermissionResource.Any, Action = PermissionAction.Any, Relationship = PermissionRelationship.Any, Attr = PermissionAttr.Any },
+            var roles = new List<Role>
+            {
+                new Role{ Name = "Administrator" }
+            };
+            foreach (Role r in roles)
+            {
+                context.Roles.Add(r);
+            }
+            context.SaveChanges();
 
-            //    new Permission { Name = "user/Event/Create", Description = "", Resource = PermissionResource.Event, Action = PermissionAction.Create},
-            //    new Permission { Name = "user/Event/View", Description = "", Resource = PermissionResource.Event, Action = PermissionAction.View, Relationship = PermissionRelationship.Any, Attr = PermissionAttr.Any },
-            //    new Permission { Name = "user/Event/Edit", Description = "", Resource = PermissionResource.Event, Action = PermissionAction.Edit, Relationship = PermissionRelationship.Owner, Attr = PermissionAttr.Any },
-            //    new Permission { Name = "user/Event/Delete", Description = "", Resource = PermissionResource.Event, Action = PermissionAction.Delete, Relationship = PermissionRelationship.Owner},
-
-            //    //new Permission { Name = "user/Location/Create", Description = "", Resource = PermissionResource.Location, Action = PermissionAction.Create, Relationship = PermissionRelationship.Any, Attr = PermissionAttr.Any },
-            //    new Permission { Name = "user/Location/View", Description = "", Resource = PermissionResource.Location, Action = PermissionAction.View, Relationship = PermissionRelationship.Any, Attr = PermissionAttr.Any },
-            //    //new Permission { Name = "user/Location/Edit", Description = "", Resource = PermissionResource.Location, Action = PermissionAction.Create, Relationship = PermissionRelationship.Any, Attr = PermissionAttr.Any },
-            //    //new Permission { Name = "user/Location/Delete", Description = "", Resource = PermissionResource.Location, Action = PermissionAction.Create, Relationship = PermissionRelationship.Any, Attr = PermissionAttr.Any },
-
-            //    // Not sure if we need these as they can just inherit Event permissions
-            //    //new Permission { Name = "user/Meeting/Create", Description = "", Resource = PermissionResource.Meeting, Action = PermissionAction.Create},
-            //    //new Permission { Name = "user/Meeting/View", Description = "", Resource = PermissionResource.Meeting, Action = PermissionAction.View, Relationship = PermissionRelationship.Member, Attr = PermissionAttr.Any },
-            //    //new Permission { Name = "user/Meeting/Edit", Description = "", Resource = PermissionResource.Meeting, Action = PermissionAction.Edit, Relationship = PermissionRelationship.Owner, Attr = PermissionAttr.Any },
-            //    //new Permission { Name = "user/Meeting/Delete", Description = "", Resource = PermissionResource.Meeting, Action = PermissionAction.Delete, Relationship = PermissionRelationship.Owner},
-
-            //    new Permission { Name = "user/Request/Create", Description = "", Resource = PermissionResource.Request, Action = PermissionAction.Create},
-            //    new Permission { Name = "user/Request/View", Description = "", Resource = PermissionResource.Request, Action = PermissionAction.View, Relationship = PermissionRelationship.Owner, Attr = PermissionAttr.Any },
-            //    new Permission { Name = "user/Request/View", Description = "", Resource = PermissionResource.Request, Action = PermissionAction.Create, Relationship = PermissionRelationship.Member, Attr = PermissionAttr.Any },
-            //    new Permission { Name = "user/Request/Edit", Description = "", Resource = PermissionResource.Request, Action = PermissionAction.View, Relationship = PermissionRelationship.Owner, Attr = PermissionAttr.Description },
-            //    new Permission { Name = "user/Request/Edit", Description = "", Resource = PermissionResource.Request, Action = PermissionAction.Edit, Relationship = PermissionRelationship.Member, Attr = PermissionAttr.Approved },
-            //    new Permission { Name = "user/Request/Delete", Description = "", Resource = PermissionResource.Request, Action = PermissionAction.Delete, Relationship = PermissionRelationship.Owner},
-            //    new Permission { Name = "user/Request/Delete", Description = "", Resource = PermissionResource.Request, Action = PermissionAction.Delete, Relationship = PermissionRelationship.Member},
-
-            //    // Not sure if we need these as they can just inherit Event permissions
-            //    //new Permission { Name = "user/Schedule/Create", Description = "", Resource = PermissionResource.Schedule, Action = PermissionAction.Create },
-            //    //new Permission { Name = "user/Schedule/View", Description = "", Resource = PermissionResource.Schedule, Action = PermissionAction.View, Relationship = PermissionRelationship.Owner, Attr = PermissionAttr.Any },
-            //    //new Permission { Name = "user/Schedule/Edit", Description = "", Resource = PermissionResource.Schedule, Action = PermissionAction.Edit, Relationship = PermissionRelationship.Owner, Attr = PermissionAttr.Any },
-            //    //new Permission { Name = "user/Schedule/Delete", Description = "", Resource = PermissionResource.Schedule, Action = PermissionAction.Delete, Relationship = PermissionRelationship.Owner, Attr = PermissionAttr.Any },
-
-            //    new Permission { Name = "user/User/Edit", Description = "", Resource = PermissionResource.User, Action = PermissionAction.Edit, Relationship = PermissionRelationship.Owner, Attr = PermissionAttr.Any },
-
-            //};
-            //foreach (Permission p in permissions)
-            //{
-            //    context.Permissions.Add(p);
-            //}
-            //context.SaveChanges();
-
-
-            //var groups = new List<Group>
-            //{
-            //    new Group { Name = "admin", Description = "program administrators, access to everything", Permissions = new List<Permission>(){ permissions[0] } },
-            //    new Group { Name = "user", Description = "Normal user group", Permissions = permissions.GetRange(1, permissions.Count())},
-            //};
-            //foreach (Group g in groups)
-            //{
-            //    context.Groups.Add(g);
-            //}
-            //context.SaveChanges();
             var editions = new List<Edition>
             {
                 new Edition {Name = "3.5e"},
@@ -105,20 +63,20 @@ namespace BountyBoardServer.Data
 
             var schedules = new List<Schedule>
             {
-                new Schedule { Day = Weekday.Monday, Type = ClockType.Open, Time = TimeSpan.FromHours(10) },
-                new Schedule { Day = Weekday.Monday, Type = ClockType.Close, Time = TimeSpan.FromHours(22) },
-                new Schedule { Day = Weekday.Tuesday, Type = ClockType.Open, Time = TimeSpan.FromHours(10) },
-                new Schedule { Day = Weekday.Tuesday, Type = ClockType.Close, Time = TimeSpan.FromHours(22) },
-                new Schedule { Day = Weekday.Wednesday, Type = ClockType.Open, Time = TimeSpan.FromHours(10) },
-                new Schedule { Day = Weekday.Wednesday, Type = ClockType.Close, Time = TimeSpan.FromHours(22) },
-                new Schedule { Day = Weekday.Thursday, Type = ClockType.Open, Time = TimeSpan.FromHours(10) },
-                new Schedule { Day = Weekday.Thursday, Type = ClockType.Close, Time = TimeSpan.FromHours(22) },
-                new Schedule { Day = Weekday.Friday, Type = ClockType.Open, Time = TimeSpan.FromHours(10) },
-                new Schedule { Day = Weekday.Friday, Type = ClockType.Close, Time = TimeSpan.FromHours(22) },
-                new Schedule { Day = Weekday.Saturday, Type = ClockType.Open, Time = TimeSpan.FromHours(10) },
-                new Schedule { Day = Weekday.Saturday, Type = ClockType.Close, Time = TimeSpan.FromHours(22) },
-                new Schedule { Day = Weekday.Sunday, Type = ClockType.Open, Time = TimeSpan.FromHours(11) },
-                new Schedule { Day = Weekday.Sunday, Type = ClockType.Close, Time = TimeSpan.FromHours(17) },
+                new Schedule { Day = Weekday.Monday, Type = ClockType.Open, Time = new DateTime(2000, 1, 1, 10, 0, 0) },
+                new Schedule { Day = Weekday.Monday, Type = ClockType.Close, Time = new DateTime(2000, 1, 1, 22, 0, 0) },
+                new Schedule { Day = Weekday.Tuesday, Type = ClockType.Open, Time = new DateTime(2000, 1, 1, 10, 0, 0) },
+                new Schedule { Day = Weekday.Tuesday, Type = ClockType.Close, Time = new DateTime(2000, 1, 1, 22, 0, 0) },
+                new Schedule { Day = Weekday.Wednesday, Type = ClockType.Open, Time = new DateTime(2000, 1, 1, 10, 0, 0) },
+                new Schedule { Day = Weekday.Wednesday, Type = ClockType.Close, Time = new DateTime(2000, 1, 1, 22, 0, 0) },
+                new Schedule { Day = Weekday.Thursday, Type = ClockType.Open, Time = new DateTime(2000, 1, 1, 10, 0, 0) },
+                new Schedule { Day = Weekday.Thursday, Type = ClockType.Close, Time = new DateTime(2000, 1, 1, 22, 0, 0) },
+                new Schedule { Day = Weekday.Friday, Type = ClockType.Open, Time = new DateTime(2000, 1, 1, 10, 0, 0) },
+                new Schedule { Day = Weekday.Friday, Type = ClockType.Close, Time = new DateTime(2000, 1, 1, 22, 0, 0) },
+                new Schedule { Day = Weekday.Saturday, Type = ClockType.Open, Time = new DateTime(2000, 1, 1, 10, 0, 0) },
+                new Schedule { Day = Weekday.Saturday, Type = ClockType.Close, Time = new DateTime(2000, 1, 1, 22, 0, 0) },
+                new Schedule { Day = Weekday.Sunday, Type = ClockType.Open, Time = new DateTime(2000, 1, 1, 11, 0, 0) },
+                new Schedule { Day = Weekday.Sunday, Type = ClockType.Close, Time = new DateTime(2000, 1, 1, 17, 0, 0) },
             };
             foreach (Schedule s in schedules)
             {
@@ -183,25 +141,29 @@ namespace BountyBoardServer.Data
             {
                 context.Meetings.Add(m);
             }
+            var testSalt = Encoding.ASCII.GetBytes("1");
             var users = new List<User>
             {
                 new User{
                     Email = "raquasa123@gmail.com", 
-                    Password = "admin",
+                    Password = UserHelper.Hash("admin", testSalt),
                     DisplayName = "Dan", 
                     DateOfBirth = DateTime.Parse("1992-10-02"), 
                     Gender = GenderId.Male, 
                     FirstName = "Dan", 
-                    LastName = "Rockefeller" 
+                    LastName = "Rockefeller",
+                    Roles = roles,
+                    Salt = testSalt
                 },
                 new User{
                     Email = "user1@bountyboard.com",
-                    Password = "user1",
+                    Password = UserHelper.Hash("password", testSalt),
                     DisplayName = "John",
                     DateOfBirth = DateTime.Parse("1992-10-02"),
                     Gender = GenderId.Male,
                     FirstName = "John",
-                    LastName = "Doe"
+                    LastName = "Doe",
+                    Salt = testSalt
                 },
             };
             foreach (User u in users)
@@ -247,8 +209,8 @@ namespace BountyBoardServer.Data
                     Repeating = true,
                     RepeatInterval = Interval.Weekly,
                     Host = users[0],
-                    RequestNeeded = false,
-                    RequestsOpen = false,
+                    RequestNeeded = true,
+                    RequestsOpen = true,
                     Requests = new List<Request>(){ requests[0] }
                 },
                 new Event{
@@ -263,8 +225,8 @@ namespace BountyBoardServer.Data
                     Repeating = false,
                     RepeatInterval = Interval.Weekly,
                     Host = users[0],
-                    RequestNeeded = false,
-                    RequestsOpen = false,
+                    RequestNeeded = true,
+                    RequestsOpen = true,
                     Requests = new List<Request>(){ requests[1] }
                 },
                 new Event{

@@ -35,6 +35,7 @@ namespace BountyBoardServer.Controllers
         /// <summary>
         /// Creates a new event
         /// </summary>
+        /// <param name="eventModel">The new event to create</param>
         /// <returns>
         /// The event if it was created
         /// </returns>

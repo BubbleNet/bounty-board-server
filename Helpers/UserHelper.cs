@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+﻿using BountyBoardServer.Data;
+using BountyBoardServer.Entities;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -10,6 +14,13 @@ namespace BountyBoardServer.Helpers
 {
     public class UserHelper
     {
+        private readonly BountyBoardContext _context;
+
+        public UserHelper(BountyBoardContext context)
+        {
+            _context = context;
+        }
+
         /// <summary>method <c>IsValidEmail</c>Verifies that the provided email is in proper
         /// email format</summary>
         public static bool IsValidEmail(string email)

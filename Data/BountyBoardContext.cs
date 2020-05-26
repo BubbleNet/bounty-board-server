@@ -25,5 +25,6 @@ namespace BountyBoardServer.Data
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<Game> Games { get; set; }
         public DbSet<Edition> Editions { get; set; }
+        public DbSet<Role> Roles { get; set; }
     }
 }

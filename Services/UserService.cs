@@ -1,6 +1,7 @@
 ﻿using BountyBoardServer.Data;
 using BountyBoardServer.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Security.Claims;
 
@@ -28,7 +29,10 @@ namespace BountyBoardServer.Services
             var claimsIdentity = controller.User.Identity as ClaimsIdentity;
             var userId = claimsIdentity.FindFirst(ClaimTypes.Name)?.Value;
             var userIdInt = int.Parse(userId);
-            var user = _context.Users.Where(u => u.Id == userIdInt).FirstOrDefault();
+            var user = _context.Users
+                .Include(u => u.Roles)
+                .Where(u => u.Id == userIdInt)
+                .FirstOrDefault();
             return user;
         }
     }

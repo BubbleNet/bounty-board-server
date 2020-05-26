@@ -28,6 +28,7 @@ namespace BountyBoardServer.Entities
         public GenderId Gender { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
+        public ICollection<Role> Roles { get; set; }
 
         public PrivateUserDetailsDto ToPrivateUserDetailsDto()
         {
@@ -54,6 +55,12 @@ namespace BountyBoardServer.Entities
                 FirstName = this.FirstName,
                 LastName = this.LastName
             };
+        }
+
+        public bool IsRole(string role)
+        {
+            foreach (Role r in this.Roles) if (r.Name == role) return true;
+            return false;
         }
     }
 }

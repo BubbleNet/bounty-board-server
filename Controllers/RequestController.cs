@@ -40,12 +40,13 @@ namespace BountyBoardServer.Controllers
         /// <remarks>
         /// 
         /// </remarks>
-        [HttpPost]
-        public IActionResult Create([FromBody] int eventId, string description)
+        [HttpPost("event/{eventId}")]
+        public IActionResult Create(int eventId, [FromBody] Request request)
         {
             // Get event
             var ev = _context.Events
                 .Include(h => h.Requests).ThenInclude(r => r.Requester)
+                .Include(e => e.Host)
                 .Include(p => p.Participants)
                 .Where(e => e.Id == eventId)
                 .FirstOrDefault();
@@ -71,20 +72,25 @@ namespace BountyBoardServer.Controllers
 
             // If event is full OR if event requires a request, create a request
             Request req;
-            if (!ev.RequestNeeded || ev.Participants.ToList().Count >= ev.MaxPlayers)
+            if (ev.RequestNeeded)
             {
-                req = new Request { 
-                    Requester = user, 
-                    Event = ev, 
-                    Description = description, 
-                    Status = RequestStatus.Pending 
-                };
-                _context.Requests.Add(req);
-                _context.SaveChanges();
+                if (ev.Participants.ToList().Count < ev.MaxPlayers)
+                {
+                    req = new Request
+                    {
+                        Requester = user,
+                        Event = ev,
+                        Description = request.Description,
+                        Status = RequestStatus.Pending
+                    };
+                    _context.Requests.Add(req);
+                    _context.SaveChanges();
+                }
+                else return BadRequest(new { message = "This event is full" });
             }
-            // If requests aren't necessary, return bad request.
-            else return BadRequest(new { message = "This event does not require a request to join." });
-            return Ok(req);
+            else return BadRequest(new { message = "This event does not require a request to join" });
+            
+            return Ok(req.ToHostRequestDto());
         }
 
         /// <summary>
@@ -98,8 +104,8 @@ namespace BountyBoardServer.Controllers
         /// <remarks>
         /// 
         /// </remarks>
-        [HttpPatch("{id}")]
-        public IActionResult Update(int eventId, [FromBody] string description)
+        [HttpPatch("event/{eventId}")]
+        public IActionResult Update(int eventId, [FromBody] Request request)
         {
             // Get current user
             var user = _userService.GetCurrentUser(this);
@@ -110,7 +116,7 @@ namespace BountyBoardServer.Controllers
                 .Include(r => r.Requester)
                 .Where(x => x.Requester.Id == user.Id && x.Event.Id == eventId).FirstOrDefault();
             if (req == null) return NotFound(new { message = "Request not found" });
-            req.Description = description;
+            req.Description = request.Description;
             _context.SaveChanges();
             return Ok(req.ToHostRequestDto());
         }
@@ -126,28 +132,29 @@ namespace BountyBoardServer.Controllers
         /// After a request is approved, a user needs to join the event with the event/join endpoint. It shouldn't auto add them.
         /// </remarks>
         [HttpPatch("{id}/set")]
-        public IActionResult Approve(int id, RequestStatus status)
+        public IActionResult Approve(int id, Request request)
         {
             // Get current user
             var user = _userService.GetCurrentUser(this);
             var query = _context.Requests
+                .Include(r => r.Requester)
                 .Include(r => r.Event).ThenInclude(e => e.Host)
                 .Where(r => r.Id == id);
-            if (status == RequestStatus.Approved || status == RequestStatus.Denied || status == RequestStatus.Pending)
-            {
+
+            if (request.Status == RequestStatus.Approved || 
+                request.Status == RequestStatus.Denied || 
+                request.Status == RequestStatus.Pending)
                 query = query.Where(r => r.Event.Host.Id == user.Id);
-            }
-            else if (status == RequestStatus.Deleted)
-            {
-                query = query.Where(r=> r.Requester.Id == user.Id);
-            }
+
+            else if (request.Status == RequestStatus.Deleted) query = query.Where(r => r.Requester.Id == user.Id);
+
             var req = query.FirstOrDefault();
             if (req == null) return NotFound(new { message = "Request not found" });
-            req.Status = status;
+            
+            req.Status = request.Status;
             _context.SaveChanges();
-            var returnRequest = req.ToHostRequestDto();
 
-            return Ok(returnRequest);
+            return Ok(req.ToHostRequestDto());
         }
 
         /// <summary>
@@ -192,12 +199,13 @@ namespace BountyBoardServer.Controllers
 
             // Get Request if host id or requester id matches
             var ev = _context.Requests
+                .Include(r=> r.Requester)
                 .Include(r => r.Event).ThenInclude(e => e.Host)
                 .Where(r => r.Id == id && (r.Event.Host.Id == user.Id || r.Requester.Id == user.Id)).FirstOrDefault();
 
             if (ev == null) return NotFound(new { message = "Request not found" });
 
-            return Ok(ev);
+            return Ok(ev.ToHostRequestDto());
         }
 
         /// <summary>
@@ -223,7 +231,9 @@ namespace BountyBoardServer.Controllers
             if (reqs.Count < 1) return NotFound(new { message = "Request not found" });
 
             // TODO: Format return to only return needed data
-            return Ok(reqs);
+            var returnRequests = new List<HostRequestDto>();
+            foreach (Request r in reqs) returnRequests.Add(r.ToHostRequestDto());
+            return Ok(returnRequests);
         }
 
         /// <summary>
@@ -236,24 +246,28 @@ namespace BountyBoardServer.Controllers
         /// <remarks>
         /// 
         /// </remarks>
-        [HttpGet("event/{id}")]
-        public IActionResult ListEventRequests(int id)
+        [HttpGet("event/{eventId}")]
+        public IActionResult ListEventRequests(int eventId)
         {
             // Get current user
             var user = _userService.GetCurrentUser(this);
 
-            // Get requests as members of the requested event
             var ev = _context.Events
                 .Include(e => e.Requests).ThenInclude(r => r.Requester)
                 .Include(e => e.Host)
-                .Where(e => e.Host.Id == user.Id && e.Id == id)
+                .Where(e => e.Id == eventId)
                 .FirstOrDefault();
-            if (ev == null) return NotFound(new { message = "Request not found" });
+            if (ev == null) return NotFound(new { message = "Event not found" });
 
-            List<HostRequestDto> returnRequests = new List<HostRequestDto>();
-            foreach (Request r in ev.Requests) returnRequests.Add(r.ToHostRequestDto());
+            if (ev.Host.Id == user.Id)
+            {
+                List<HostRequestDto> returnRequests = new List<HostRequestDto>();
+                foreach (Request r in ev.Requests) returnRequests.Add(r.ToHostRequestDto());
+                return Ok(returnRequests);
+            }
+            foreach (Request r in ev.Requests) if (r.Requester.Id == user.Id) return Ok(r.ToHostRequestDto());
 
-            return Ok(returnRequests);
+            return NotFound(new { message = "Request not found" });
         }
     }
 }

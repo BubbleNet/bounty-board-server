@@ -41,7 +41,7 @@ namespace BountyBoardServer.Services
         public TokenModel Authenticate(string email, string password)
         {
             // Check to see if user exists
-            var user = _context.Users.Where(x => x.Email == email).FirstOrDefault();
+            var user = _context.Users.Include(u => u.Roles).Where(x => x.Email == email).FirstOrDefault();
             if (user == null) return null;
 
             //TODO: check if hashed passwords are equal
@@ -76,12 +76,15 @@ namespace BountyBoardServer.Services
             var expires = DateTime.UtcNow.AddDays(7);
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
+            List<Claim> claimList = new List<Claim>();
+            foreach(Role r in user.Roles)
+            {
+                claimList.Add(new Claim(ClaimTypes.Role, r.Name));
+            }
+            claimList.Add(new Claim(ClaimTypes.Name, user.Id.ToString()));
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Name, user.Id.ToString())
-                }),
+                Subject = new ClaimsIdentity(claimList),
                 Expires = expires,
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
