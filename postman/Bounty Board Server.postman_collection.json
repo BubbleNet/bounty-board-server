@@ -1,0 +1,1928 @@
+{
+	"info": {
+		"_postman_id": "4fd426fc-8ae6-4bee-9037-c54bb602e93b",
+		"name": "Bounty Board Server",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "auth/authenticate Success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "a7c1dcdb-e379-4093-9c18-f48a54bb6617",
+								"exec": [
+									"var data = JSON.parse(responseBody);",
+									"pm.environment.set(\"token\", data.accessToken);",
+									"pm.environment.set(\"refreshToken\", data.refreshToken)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"email\": \"raquasa123@gmail.com\",\n\t\"password\": \"admin\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/authenticate",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"authenticate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "auth/authenticate 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "734fe2ce-535e-4ef6-8e6e-ddaac6dc995d",
+								"exec": [
+									"var data = JSON.parse(responseBody);",
+									"pm.environment.set(\"token\", data.accessToken);",
+									"pm.environment.set(\"refreshToken\", data.refreshToken)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"email\": \"danr7291@gmail.com\",\n\t\"password\": \"ahWXm82+-Yrds$uB\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/authenticate",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"authenticate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "auth/authenticate Fail",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"email\": \"danr7290@gmail.com\",\n\t\"password\": \"notThePassword\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/authenticate",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"authenticate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "auth/refresh Success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5cd7145a-d355-4359-b41d-b9cc6ac73f70",
+								"exec": [
+									"var data = JSON.parse(responseBody);",
+									"pm.environment.set(\"token\", data.accessToken);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"refreshToken\": \"{{refreshToken}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/refresh",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "auth/refresh Success Fail",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"refreshToken\": \"0\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/refresh",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "users",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "6817ace8-9d68-473c-b32a-3f0f60cb950a",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"email\": \"danr7290@gmail.com\",\n\t\"password\": \"ahWXm82+-Yrds$uB\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:8000/users",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "users 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "02387b41-1cf5-4128-a102-0313d368850a",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"email\": \"danr7291@gmail.com\",\n\t\"password\": \"ahWXm82+-Yrds$uB\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:8000/users",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "users/{id}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "6817ace8-9d68-473c-b32a-3f0f60cb950a",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/users/{{id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"{{id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "users/{id}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "6817ace8-9d68-473c-b32a-3f0f60cb950a",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"email\": \"danr7290@gmail.com\",\n\t\"dateOfBirth\": \"2019-01-06\",\n\t\"displayName\": \"Bubbles\",\n\t\"firstName\": \"Dan\",\n\t\"lastName\": \"Rockefeller\",\n\t\"gender\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/users/{{id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"{{id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "users/search",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "6817ace8-9d68-473c-b32a-3f0f60cb950a",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"email\": \"danr7290@gmail.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/users/search",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"search"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Events",
+			"item": [
+				{
+					"name": "events",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "6817ace8-9d68-473c-b32a-3f0f60cb950a",
+								"exec": [
+									"var data = JSON.parse(responseBody);",
+									"pm.environment.set(\"event_id\", data.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"A great adventure 6\",\n\t\"gameId\": 2,\n\t\"editionId\": 2,\n\t\"summary\": \"Join your friends in bringing down a powerful red dragon\",\n\t\"description\": \"This is a description of the adventure\",\n\t\"minplayers\": 1,\n\t\"maxplayers\": 6,\n\t\"eventLocationId\": 1,\n\t\"repeating\": true,\n\t\"repeatInterval\": 0,\n\t\"requestNeeded\": true,\n\t\"requestsOpen\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/events",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"events"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "events/{id}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "6817ace8-9d68-473c-b32a-3f0f60cb950a",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"A great adventure 4\",\n\t\"gameId\": 2,\n\t\"editionId\": 2,\n\t\"summary\": \"Join your friends in bringing down a powerful red dragon\",\n\t\"description\": \"This is a description of the adventure\",\n\t\"minplayers\": 1,\n\t\"maxplayers\": 6,\n\t\"eventLocationId\": 1,\n\t\"repeating\": true,\n\t\"repeatInterval\": 0,\n\t\"requestNeeded\": false,\n\t\"requestsOpen\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/events/{{event_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"events",
+								"{{event_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "events/{id}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "6817ace8-9d68-473c-b32a-3f0f60cb950a",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/events/{{event_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"events",
+								"{{event_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "events/me",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "a1657c9e-fe8a-4cec-9cd9-7c84d4c41089",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/events/me",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"events",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "events/list",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8ab4acc0-3595-4b7b-817e-b218729c3442",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/events/list?editionId=1",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"events",
+								"list"
+							],
+							"query": [
+								{
+									"key": "gameId",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "editionId",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "events/join/{id}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "212df559-62a0-497a-9c61-aebdcb85f7d6",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/events/join/{{event_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"events",
+								"join",
+								"{{event_id}}"
+							],
+							"query": [
+								{
+									"key": "gameId",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "events/leave/{id}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "42cab3e1-21dd-47e1-a039-aa5eadd700e9",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/events/leave/{{event_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"events",
+								"leave",
+								"{{event_id}}"
+							],
+							"query": [
+								{
+									"key": "gameId",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "events/{id}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c9d5d562-a835-4a2d-bc77-b67d18db67e7",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/events/{{event_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"events",
+								"{{event_id}}"
+							],
+							"query": [
+								{
+									"key": "gameId",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "events/{id}/meeting",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c11ff44a-21a0-45e8-80f3-4a64c6a4b5b8",
+								"exec": [
+									"var data = JSON.parse(responseBody);\r",
+									"pm.environment.set(\"meeting_id\", data.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"startTime\": \"2020-07-01T22:19:00-04:00\",\n\t\"endTime\": \"2000-07-01T22:23:00-04:00\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/events/{{event_id}}/meeting",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"events",
+								"{{event_id}}",
+								"meeting"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "events/{id}/meeting/{meeting_id}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fbd49165-f161-4647-9967-1c9bde59e2a6",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/events/{{event_id}}/meeting/{{meeting_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"events",
+								"{{event_id}}",
+								"meeting",
+								"{{meeting_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Requests",
+			"item": [
+				{
+					"name": "requests/event/{event_id}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4c586604-d15b-4de4-9c7f-82956a3cb635",
+								"exec": [
+									"var data = JSON.parse(responseBody);\r",
+									"pm.environment.set(\"request_id\", data.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"description\": \"This is a description\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/requests/event/{{event_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"requests",
+								"event",
+								"{{event_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "requests/event/{event_id}",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"description\": \"Please, PLEASE let me join your event\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/requests/event/{{event_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"requests",
+								"event",
+								"{{event_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "requests/event/{event_id}",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/requests/event/{{event_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"requests",
+								"event",
+								"{{event_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "requests/{id}/set",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"status\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/requests/{{request_id}}/set",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"requests",
+								"{{request_id}}",
+								"set"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "requests/{id}",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/requests/{{request_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"requests",
+								"{{request_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "requests/{id}",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/requests/{{request_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"requests",
+								"{{request_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "requests/me",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/requests/me",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"requests",
+								"me"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Games",
+			"item": [
+				{
+					"name": "games",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "3569c5fa-19b2-4529-abc6-990602058394",
+								"exec": [
+									"var data = JSON.parse(responseBody);\r",
+									"pm.environment.set(\"game_id\", data.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Call of Cthulhu\",\n\t\"description\": \"Horror tabletop RPG\",\n\t\"publisher\": \"Chaosium\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/games",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"games"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "games/{id}",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/games/{{game_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"games",
+								"{{game_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "games/{id}",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Call of Cthulhu\",\n\t\"description\": \"Horror tabletop RPG With giant squid faced monsters\",\n\t\"publisher\": \"Chaosium Inc\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/games/{{game_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"games",
+								"{{game_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "games/{id}",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/games/{{game_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"games",
+								"{{game_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "games/{id}/editions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c33df365-548c-42c0-89db-7b2a2ef91a62",
+								"exec": [
+									"var data = JSON.parse(responseBody);\r",
+									"pm.environment.set(\"edition_id\", data.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"Name\": \"7e\",\n\t\"Description\": \"The seventh edition of this game\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/games/{{game_id}}/editions",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"games",
+								"{{game_id}}",
+								"editions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "games/{id}/editions/{edition_id}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c2eca65f-89f2-4481-8ca4-63e60625cff6",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"Name\": \"8e\",\n\t\"Description\": \"The eigth edition of this game\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/games/{{game_id}}/editions/{{edition_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"games",
+								"{{game_id}}",
+								"editions",
+								"{{edition_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "games/{id}/editions/{edition_id}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f0c4ff0b-6931-4ba0-a2c8-76a0231413a9",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/games/{{game_id}}/editions/{{edition_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"games",
+								"{{game_id}}",
+								"editions",
+								"{{edition_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Locations",
+			"item": [
+				{
+					"name": "locations",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8402336e-94c9-4a8d-8f3a-bd36fbd63252",
+								"exec": [
+									"var data = JSON.parse(responseBody);\r",
+									"pm.environment.set(\"location_id\", data.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Just Games\",\n\t\"streetNumber\": \"1061\",\n\t\"streetName\": \"Penfield Rd\",\n\t\"additional\": \"#750\",\n\t\"city\": \"Rochester\",\n\t\"zipCode\": \"14625\",\n\t\"state\": \"NY\",\n\t\"country\": \"USA\",\n\t\"description\": \"A local game store\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/locations",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"locations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "locations/{id}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "9c9f9219-7506-418a-b57f-0de536456ea5",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Just Games!\",\n\t\"streetNumber\": \"1061\",\n\t\"streetName\": \"Penfield Rd\",\n\t\"additional\": \"Suite 750\",\n\t\"city\": \"Rochester\",\n\t\"zipCode\": \"14625\",\n\t\"state\": \"NY\",\n\t\"country\": \"USA\",\n\t\"description\": \"A small local game store located in a plaza\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/locations/{{location_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"locations",
+								"{{location_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "locations/{id}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f69cc908-b49d-41e8-8a7b-bf43dcafcd03",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/locations/{{location_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"locations",
+								"{{location_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "locations/list",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "43082a98-d457-4ece-a894-f57f73486441",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/locations/list",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"locations",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "locations",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "539cda31-3a93-4171-934c-e2e68c22cc63",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/locations/{{location_id}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"locations",
+								"{{location_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "locations/{id}/schedule",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "9bdb8596-991c-47df-97ad-c7117a37b6ce",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n\t{\n\t\t\"day\": 0,\n\t\t\"type\": 0,\n\t\t\"time\": \"2000-01-01T11:00:00+00:00\"\n\t},\n\t{\n\t\t\"day\": 0,\n\t\t\"type\": 1,\n\t\t\"time\": \"2000-01-01T22:00:00+00:00\"\n\t}\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/locations/{{location_id}}/schedule",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"locations",
+								"{{location_id}}",
+								"schedule"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "locations/{id}/schedule",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "a3d7398d-0209-4035-80fb-eb444ce0c411",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/locations/{{location_id}}/schedule",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"locations",
+								"{{location_id}}",
+								"schedule"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"auth": {
+		"type": "bearer"
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "8c41bf4a-865a-491c-992c-f55413d66d16",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "955ea725-7ca4-4925-9f89-2736a621933b",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "e85118a6-cd42-45bd-beb9-542b302de4b4",
+			"key": "token",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"id": "43e2b2c0-d32d-4433-af22-357adcec1330",
+			"key": "host",
+			"value": "https://localhost:8001",
+			"type": "string"
+		},
+		{
+			"id": "99f32120-447d-4251-9136-122a9ed43d6f",
+			"key": "id",
+			"value": "3",
+			"type": "string"
+		},
+		{
+			"id": "71bfc260-f144-4aaa-ad8a-3e16ab92b6f0",
+			"key": "refreshToken ",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"id": "72095e34-ed35-4e9e-8835-37b064bbc6a8",
+			"key": "event_id",
+			"value": "2",
+			"type": "string"
+		},
+		{
+			"id": "83b7d51b-22c6-49d4-bec2-5d3a7c85cd26",
+			"key": "request_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"id": "a1b2b079-9b64-4c45-b8f5-80ab159a4bac",
+			"key": "game_id",
+			"value": "3",
+			"type": "string"
+		},
+		{
+			"id": "4671eef2-35cc-4db9-a946-df4b76cecc25",
+			"key": "edition_id",
+			"value": "3",
+			"type": "string"
+		},
+		{
+			"id": "7dc24d78-03bc-47a0-8a83-c1917776bf59",
+			"key": "location_id",
+			"value": "3",
+			"type": "string"
+		},
+		{
+			"id": "b26562ed-a7d4-466c-af34-6b8cf754d3fd",
+			"key": "meeting_id",
+			"value": "3",
+			"type": "string"
+		}
+	],
+	"protocolProfileBehavior": {}
+}

@@ -16,6 +16,11 @@ namespace BountyBoardServer.Data
         {
         }
 
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            builder.HasPostgresExtension("postgis");
+        }
+
         public DbSet<User> Users { get; set; }
         public DbSet<Event> Events { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }

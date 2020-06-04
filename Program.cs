@@ -38,8 +38,8 @@ namespace BountyBoardServer
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<Startup>()
-                    .UseUrls("https://localhost:8000");
+                    webBuilder.UseStartup<Startup>();
+                    //.UseUrls("https://localhost:8000");
                 });
     }
 }
